@@ -1,5 +1,3 @@
-version: '3.8'
-
 volumes:
   postgres-data:
   pgadmin-data:
@@ -20,6 +18,8 @@ services:
     command: sleep infinity
     networks:
       - dev-network
+    depends_on:
+      - db
   db:
     container_name: postgresdb
     image: postgres:latest
@@ -45,6 +45,8 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     networks:
       - dev-network
+    depends_on:
+      - db
 
 networks:
   dev-network:
