@@ -1,11 +1,11 @@
 package com.example.vestigioapi.repository;
 
-import com.example.vestigioapi.model.User;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-@Repository
+import com.example.vestigioapi.model.user.User;
+
 public interface UserRepository extends JpaRepository<User, Long> {
-    
+    Optional<User> findByEmail(String email);
 }

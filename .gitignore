@@ -1,4 +1,5 @@
 target/
+.vscode/
 *.jar
 *.war
 *.ear
