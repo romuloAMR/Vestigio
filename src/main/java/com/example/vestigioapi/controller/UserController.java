@@ -1,6 +1,6 @@
 package com.example.vestigioapi.controller;
 
-import com.example.vestigioapi.model.User;
+import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.repository.UserRepository;
 
 import java.util.List;
