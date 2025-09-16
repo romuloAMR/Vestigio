@@ -13,7 +13,8 @@
 				"vscjava.vscode-spring-boot-dashboard",
 				"ms-azuretools.vscode-docker",
 				"vscjava.vscode-maven",
-				"ms-azuretools.vscode-containers"
+				"ms-azuretools.vscode-containers",
+				"postman.postman-for-vscode"
 			]
 		}
 	}

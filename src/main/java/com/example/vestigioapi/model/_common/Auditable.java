@@ -1,6 +1,5 @@
 package com.example.vestigioapi.model._common;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
