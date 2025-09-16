@@ -70,7 +70,7 @@ public class StoryService {
             story.getTitle(),
             story.getEnigmaticSituation(),
             story.getDifficulty(),
-            story.getCreator() != null ? story.getCreator().getUsername() : "System"
+            story.getCreator() != null ? story.getCreator().getName() : "System"
         );
     }
 }

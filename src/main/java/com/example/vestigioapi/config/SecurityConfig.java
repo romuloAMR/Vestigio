@@ -9,6 +9,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.vestigioapi.model.user.Role;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -25,9 +27,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
 
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasAuthority(Role.ADMIN.name())
 
-                .requestMatchers("/api/jogador/**").hasRole("JOGADOR")
+                .requestMatchers("/api/jogador/**").hasAuthority(Role.JOGADOR.name())
 
                 .anyRequest().authenticated()
             )
