@@ -1,5 +1,4 @@
 spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST:db}:${POSTGRES_PORT:5432}/${POSTGRES_DB:postgresdb}
-
 spring.datasource.username=${POSTGRES_USER:postgres}
 spring.datasource.password=${POSTGRES_PASSWORD:admin123}
 
@@ -8,6 +7,5 @@ spring.jpa.show-sql=${JPA_SHOW_SQL:true}
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.properties.hibernate.format_sql=${JPA_FORMAT_SQL:true}
 
-application.security.jwt.secret-key=Y6OpfDwqTPgtZS2Y1j/e0hJWav4PfZ5cUIQFLuV4g4emiSJLUiuls1a9UclmJYWC
-# 24 horas
-application.security.jwt.expiration=86400000
+application.security.jwt.secret-key=XXXXXXXXXXXX
+application.security.jwt.expiration=XXXXXXXXXXXX
