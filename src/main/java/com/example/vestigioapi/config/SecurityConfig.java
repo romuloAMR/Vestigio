@@ -29,7 +29,7 @@ public class SecurityConfig {
 
                 .requestMatchers("/api/admin/**").hasAuthority(Role.ADMIN.name())
 
-                .requestMatchers("/api/jogador/**").hasAuthority(Role.JOGADOR.name())
+                .requestMatchers("/api/player/**").hasAuthority(Role.PLAYER.name())
 
                 .anyRequest().authenticated()
             )

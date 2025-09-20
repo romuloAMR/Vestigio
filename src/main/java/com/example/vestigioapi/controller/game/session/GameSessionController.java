@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/jogador/game-sessions")
+@RequestMapping("/api/player/game-sessions")
 @RequiredArgsConstructor
 public class GameSessionController {
 

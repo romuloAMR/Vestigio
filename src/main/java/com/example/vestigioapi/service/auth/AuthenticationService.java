@@ -27,7 +27,7 @@ public class AuthenticationService {
                 .name(request.name())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .role(Role.JOGADOR)
+                .role(Role.PLAYER)
                 .build();
         repository.save(user);
         var jwtToken = jwtService.generateToken(user);

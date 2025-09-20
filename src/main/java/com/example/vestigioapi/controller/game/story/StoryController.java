@@ -14,7 +14,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/jogador/stories")
+@RequestMapping("/api/player/stories")
 @RequiredArgsConstructor
 public class StoryController {
 
