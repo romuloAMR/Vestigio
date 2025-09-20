@@ -1,4 +1,4 @@
-package com.example.vestigioapi.controller;
+package com.example.vestigioapi.controller.user;
 
 import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.repository.UserRepository;
