@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/java:1-21-bullseye
+FROM mcr.microsoft.com/devcontainers/java:1-21-bookworm
 
 ARG INSTALL_MAVEN="true"
 ARG MAVEN_VERSION="3.9.6"

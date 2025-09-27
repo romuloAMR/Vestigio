@@ -15,7 +15,7 @@
 				"vscjava.vscode-maven",
 				"ms-azuretools.vscode-containers",
 				"postman.postman-for-vscode",
-				"cweijan.vscode-postgresql-client2"
+				"ms-ossdata.vscode-pgsql"
 			]
 		}
 	}
