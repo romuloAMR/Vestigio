@@ -8,15 +8,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.example.vestigioapi.model._common.Auditable;
-import com.example.vestigioapi.util.ValidationMessages;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,18 +29,17 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 public class User extends Auditable implements UserDetails {
 
-    @NotBlank(message = ValidationMessages.NAME_REQUIRED)
+    @Column
     private String name;
 
-    @Email(message = ValidationMessages.EMAIL_INVALID)
-    @NotBlank(message = ValidationMessages.EMAIL_REQUIRED)
     @Column(unique = true)
     private String email;
 
-    @NotBlank(message = ValidationMessages.PASSWORD_REQUIRED)
+    @Column
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column
     private Role role;
 
     @Override

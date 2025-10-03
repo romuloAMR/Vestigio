@@ -24,6 +24,7 @@ public class StoryService {
         story.setTitle(dto.title());
         story.setEnigmaticSituation(dto.enigmaticSituation());
         story.setFullSolution(dto.fullSolution());
+        story.setGenre(dto.genre());
         story.setDifficulty(dto.difficulty());
         story.setCreator(creator);
         story.setStatus(StoryStatus.PENDING);
@@ -52,6 +53,7 @@ public class StoryService {
         story.setTitle(dto.title());
         story.setEnigmaticSituation(dto.enigmaticSituation());
         story.setFullSolution(dto.fullSolution());
+        story.setGenre(dto.genre());
         story.setDifficulty(dto.difficulty());
         Story updatedStory = storyRepository.save(story);
         return toResponseDTO(updatedStory);
@@ -69,6 +71,8 @@ public class StoryService {
             story.getId(),
             story.getTitle(),
             story.getEnigmaticSituation(),
+            story.getFullSolution(),
+            story.getGenre(),
             story.getDifficulty(),
             story.getCreator() != null ? story.getCreator().getName() : "System"
         );

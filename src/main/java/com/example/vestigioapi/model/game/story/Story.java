@@ -37,6 +37,10 @@ public class Story extends Auditable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private Genre genre;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Difficulty difficulty;
     
     @Enumerated(EnumType.STRING)

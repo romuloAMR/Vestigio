@@ -7,19 +7,13 @@ import com.example.vestigioapi.util.ValidationMessages;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record StoryCreateDTO(
+public record StoryAICreateDTO(
     @NotBlank(message = ValidationMessages.TITLE_REQUIRED)
     String title,
     
-    @NotBlank(message = ValidationMessages.ENIGMATIC_SITUATION_REQUIRED)
-    String enigmaticSituation,
-    
-    @NotBlank(message = ValidationMessages.FULL_SOLUTION_REQUIRED)
-    String fullSolution,
+    @NotNull(message = ValidationMessages.GENRE_REQUIRED)
+    Genre genre,
 
     @NotNull(message = ValidationMessages.DIFFICULTY_REQUIRED)
-    Genre genre,
-    
-    @NotNull(message = ValidationMessages.DIFFICULTY_REQUIRED)
     Difficulty difficulty
-) {}
+){}
