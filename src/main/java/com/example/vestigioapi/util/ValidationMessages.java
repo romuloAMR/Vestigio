@@ -9,6 +9,7 @@ public class ValidationMessages {
     public static final String TITLE_REQUIRED = "O título é obrigatório.";
     public static final String ENIGMATIC_SITUATION_REQUIRED = "A situação enigmática é obrigatória.";
     public static final String FULL_SOLUTION_REQUIRED = "A solução completa é obrigatória.";
+    public static final String GENRE_REQUIRED = "A gênero é obrigatória.";
     public static final String DIFFICULTY_REQUIRED = "A dificuldade é obrigatória.";
 
     public static final String ID_REQUIRED = "O ID é obrigatório.";
