@@ -71,6 +71,7 @@ public class StoryService {
             story.getId(),
             story.getTitle(),
             story.getEnigmaticSituation(),
+            story.getFullSolution(),
             story.getGenre(),
             story.getDifficulty(),
             story.getCreator() != null ? story.getCreator().getName() : "System"

@@ -9,3 +9,6 @@ spring.jpa.properties.hibernate.format_sql=${JPA_FORMAT_SQL:true}
 
 application.security.jwt.secret-key=XXXXXXXXXXXX
 application.security.jwt.expiration=XXXXXXXXXXXX
+
+spring.ai.vertex.ai.gemini.project-id=XXXXXXXXXXXX
+spring.ai.vertex.ai.gemini.location=XXXXXXXXXXXX

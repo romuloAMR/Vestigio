@@ -68,6 +68,7 @@ public class GameSessionService {
                 session.getStory().getId(),
                 session.getStory().getTitle(),
                 session.getStory().getEnigmaticSituation(),
+                session.getStory().getFullSolution(),
                 session.getStory().getGenre(),
                 session.getStory().getDifficulty(),
                 session.getStory().getCreator().getUsername()

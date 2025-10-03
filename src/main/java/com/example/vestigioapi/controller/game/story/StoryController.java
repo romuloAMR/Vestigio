@@ -1,14 +1,18 @@
 package com.example.vestigioapi.controller.game.story;
 
+import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryCreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
 import com.example.vestigioapi.model.user.User;
+import com.example.vestigioapi.service.game.story.StoryAIService;
 import com.example.vestigioapi.service.game.story.StoryService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 import java.util.List;
 
 
@@ -19,6 +23,7 @@ import java.util.List;
 public class StoryController {
 
     private final StoryService storyService;
+    private final StoryAIService storyAIService;
 
     @PostMapping
     public ResponseEntity<StoryResponseDTO> createStory(
@@ -26,7 +31,16 @@ public class StoryController {
         @AuthenticationPrincipal User creator
     ) {
         StoryResponseDTO response = storyService.createStory(dto, creator);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.created(URI.create("/api/player/stories/" + response.id())).body(response);
+    }
+
+    @PostMapping("/ai")
+    public ResponseEntity<StoryResponseDTO> createStoryWithAI(
+        @RequestBody StoryAICreateDTO dto,
+        @AuthenticationPrincipal User creator
+    ) {
+        StoryResponseDTO response = storyAIService.createAIStory(dto, creator);
+        return ResponseEntity.created(URI.create("/api/player/stories/ai/" + response.id())).body(response);
     }
 
     @GetMapping("/{id}")
