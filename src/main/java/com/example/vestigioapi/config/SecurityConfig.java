@@ -25,11 +25,11 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
 
-                .requestMatchers("/api/admin/**").hasAuthority(Role.ADMIN.name())
+                .requestMatchers("/api/v1/admin/**").hasAuthority(Role.ADMIN.name())
 
-                .requestMatchers("/api/player/**").hasAuthority(Role.PLAYER.name())
+                .requestMatchers("/api/v1/player/**").hasAuthority(Role.PLAYER.name())
 
                 .anyRequest().authenticated()
             )
