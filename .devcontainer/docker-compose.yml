@@ -1,5 +1,5 @@
 volumes:
-  postgres-data:
+  vestigio-data:
 
 services:
   app:
@@ -24,7 +24,7 @@ services:
     image: postgres:latest
     restart: unless-stopped
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - vestigio-data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
