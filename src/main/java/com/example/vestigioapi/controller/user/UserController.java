@@ -1,6 +1,7 @@
 package com.example.vestigioapi.controller.user;
 
 import com.example.vestigioapi.dto.user.PasswordUpdateDTO;
+import com.example.vestigioapi.dto.user.UserDeletionDTO;
 import com.example.vestigioapi.dto.user.UserResponseDTO;
 import com.example.vestigioapi.dto.user.UserUpdateRequestDTO;
 import com.example.vestigioapi.model.user.User;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 
@@ -67,6 +69,17 @@ public class UserController {
         return ResponseEntity
             .noContent()
             .build(); 
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMe(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody UserDeletionDTO request
+    ) {
+        userService.deleteUser(currentUser.getId(), request.currentPassword());
+        return ResponseEntity
+            .noContent() 
+            .build();
     }
     
 }

@@ -84,4 +84,16 @@ public class UserService {
         
         userRepository.save(user);
     }
+
+    @Transactional
+    public void deleteUser(Long userId, String providedPassword) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+
+        if (!passwordEncoder.matches(providedPassword, user.getPassword())) {
+            throw new RuntimeException("A senha fornecida está incorreta. A exclusão foi cancelada."); 
+        }
+
+        userRepository.delete(user);
+    }
 }
