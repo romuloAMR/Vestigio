@@ -4,7 +4,6 @@ import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryCreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
 import com.example.vestigioapi.model.user.User;
-import com.example.vestigioapi.service.game.story.StoryAIService;
 import com.example.vestigioapi.service.game.story.StoryService;
 
 import jakarta.validation.Valid;
@@ -24,7 +23,6 @@ import java.util.List;
 public class StoryController {
 
     private final StoryService storyService;
-    private final StoryAIService storyAIService;
 
     @PostMapping
     public ResponseEntity<StoryResponseDTO> createStory(
@@ -42,7 +40,7 @@ public class StoryController {
         @Valid @RequestBody StoryAICreateDTO dto,
         @AuthenticationPrincipal User creator
     ) {
-        StoryResponseDTO response = storyAIService.createAIStory(dto, creator);
+        StoryResponseDTO response = storyService.createAIStory(dto, creator);
         return ResponseEntity
             .created(URI.create("/api/v1/player/stories/ai/" + response.id()))
             .body(response);

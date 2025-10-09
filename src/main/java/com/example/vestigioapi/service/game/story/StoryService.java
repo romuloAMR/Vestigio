@@ -5,12 +5,16 @@ import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 
+import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryCreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
+import com.example.vestigioapi.model.game.story.Difficulty;
+import com.example.vestigioapi.model.game.story.Genre;
 import com.example.vestigioapi.model.game.story.Story;
 import com.example.vestigioapi.model.game.story.StoryStatus;
 import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.repository.StoryRepository;
+import com.example.vestigioapi.service.ai.AIService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class StoryService {
 
     private final StoryRepository storyRepository;
+    private final AIService aiService;
     
     public StoryResponseDTO createStory(StoryCreateDTO dto, User creator) {
         Story story = new Story();
@@ -33,6 +38,25 @@ public class StoryService {
         Story savedStory = storyRepository.save(story);
 
         return toResponseDTO(savedStory);
+    }
+
+    public StoryResponseDTO createAIStory(StoryAICreateDTO dto, User creator) {
+        
+        String title = dto.title();
+        Genre genre = dto.genre();
+        Difficulty difficulty = dto.difficulty();
+        String enigmaticSituation = aiService.generateStoryEnigmaticSituation(title, genre, difficulty);
+        String fullSolution = aiService.generateStoryFullSolution(title, enigmaticSituation);
+
+        StoryCreateDTO fullStoryDTO = new StoryCreateDTO(
+            title,
+            enigmaticSituation,
+            fullSolution,
+            genre,
+            difficulty
+        );
+        
+        return createStory(fullStoryDTO, creator);
     }
 
     public StoryResponseDTO getStoryById(Long id) {
