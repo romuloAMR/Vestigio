@@ -1,11 +1,7 @@
-package com.example.vestigioapi.service.game.story;
+package com.example.vestigioapi.service.ai;
 
-import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
-import com.example.vestigioapi.dto.game.story.StoryCreateDTO;
-import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
 import com.example.vestigioapi.model.game.story.Difficulty;
 import com.example.vestigioapi.model.game.story.Genre;
-import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.util.StoryPromptTemplates;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +10,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class StoryAIService {
+public class AIService {
 
-    private final StoryService storyService;
     private final ChatClient.Builder chatClientBuilder;
     private ChatClient chatClient;
 
@@ -24,27 +19,8 @@ public class StoryAIService {
     public void init() {
         this.chatClient = chatClientBuilder.build();
     }
-
-    public StoryResponseDTO createAIStory(StoryAICreateDTO dto, User creator) {
-        
-        String title = dto.title();
-        Genre genre = dto.genre();
-        Difficulty difficulty = dto.difficulty();
-        String enigmaticSituation = generateEnigmaticSituation(title, genre, difficulty);
-        String fullSolution = generateFullSolution(title, enigmaticSituation);
-
-        StoryCreateDTO fullStoryDTO = new StoryCreateDTO(
-            title,
-            enigmaticSituation,
-            fullSolution,
-            genre,
-            difficulty
-        );
-        
-        return storyService.createStory(fullStoryDTO, creator);
-    }
     
-    private String generateEnigmaticSituation(String title, Genre genre, Difficulty difficulty) {
+    public String generateStoryEnigmaticSituation(String title, Genre genre, Difficulty difficulty) {
 
         String userPromptContent = String.format(
             StoryPromptTemplates.ENIGMATIC_SITUATION_PROMPT,
@@ -59,7 +35,7 @@ public class StoryAIService {
             .content();
     }
 
-    private String generateFullSolution(String title, String situation) {
+    public String generateStoryFullSolution(String title, String situation) {
         
         String userPromptContent = String.format(
             StoryPromptTemplates.FULL_SOLUTION_PROMPT,

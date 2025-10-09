@@ -1,6 +1,7 @@
 package com.example.vestigioapi.controller.game.session;
 
-import org.springframework.http.HttpStatus;
+import java.net.URI;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +20,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/player/game-sessions")
+@RequestMapping("/api/v1/player/game-sessions")
 @RequiredArgsConstructor
 public class GameSessionController {
 
@@ -29,9 +30,12 @@ public class GameSessionController {
     public ResponseEntity<GameSessionResponseDTO> createGame(
             @Valid @RequestBody GameSessionCreateDTO createDTO,
             @AuthenticationPrincipal User master) {
-        
+
         GameSessionResponseDTO response = gameSessionService.createGameSession(createDTO, master);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        return ResponseEntity
+            .created(URI.create("/api/v1/player/game-sessions/" + response.roomCode())) 
+            .body(response);
     }
 
     @PostMapping("/{roomCode}/join")
@@ -40,12 +44,14 @@ public class GameSessionController {
             @AuthenticationPrincipal User player) {
         
         GameSessionResponseDTO response = gameSessionService.joinGameSession(roomCode, player);
-        return ResponseEntity.ok(response);
+        return ResponseEntity
+            .ok(response);
     }
 
     @GetMapping("/{roomCode}")
     public ResponseEntity<GameSessionResponseDTO> getGame(@PathVariable String roomCode) {
         GameSessionResponseDTO response = gameSessionService.getGameSessionByRoomCode(roomCode);
-        return ResponseEntity.ok(response);
+        return ResponseEntity
+            .ok(response);
     }
 }
