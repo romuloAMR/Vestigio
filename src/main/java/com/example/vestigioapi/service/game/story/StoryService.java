@@ -1,6 +1,7 @@
 package com.example.vestigioapi.service.game.story;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 
@@ -36,7 +37,7 @@ public class StoryService {
 
     public StoryResponseDTO getStoryById(Long id) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Story not found with id: " + id));
+            .orElseThrow(() -> new NoSuchElementException("Story not found with id: " + id));
         return toResponseDTO(story);
     }
 
@@ -49,7 +50,7 @@ public class StoryService {
 
     public StoryResponseDTO updateStory(Long id, StoryCreateDTO dto) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Story not found with id: " + id));
+            .orElseThrow(() -> new NoSuchElementException("Story not found with id: " + id));
         story.setTitle(dto.title());
         story.setEnigmaticSituation(dto.enigmaticSituation());
         story.setFullSolution(dto.fullSolution());
@@ -60,10 +61,10 @@ public class StoryService {
     }
 
     public void deleteStory(Long id) {
-        if (!storyRepository.existsById(id)) {
-            throw new IllegalArgumentException("Story not found with id: " + id);
-        }
-        storyRepository.deleteById(id);
+        Story story = storyRepository.findById(id)
+            .orElseThrow(() -> new NoSuchElementException("Story not found with id: " + id));
+        
+        storyRepository.delete(story);
     }
 
     private StoryResponseDTO toResponseDTO(Story story) {
