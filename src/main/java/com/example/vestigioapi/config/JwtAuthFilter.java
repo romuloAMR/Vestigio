@@ -32,6 +32,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            System.out.println(">>> Authenticated user: " +
+                SecurityContextHolder.getContext().getAuthentication().getName());
+            System.out.println(">>> Authorities: " +
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+        }
+
         if (request.getServletPath().contains("/api/auth")) {
             filterChain.doFilter(request, response);
             return;

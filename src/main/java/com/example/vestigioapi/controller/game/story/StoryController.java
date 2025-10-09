@@ -43,6 +43,13 @@ public class StoryController {
         return ResponseEntity.created(URI.create("/api/player/stories/ai/" + response.id())).body(response);
     }
 
+    @GetMapping("/random")
+    public ResponseEntity<List<StoryResponseDTO>> getRandomStories(
+            @RequestParam(defaultValue = "3") int count) {
+        List<StoryResponseDTO> stories = storyService.findRandomStories(count);
+        return ResponseEntity.ok(stories);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<StoryResponseDTO> getStoryById(@PathVariable Long id) {
         StoryResponseDTO response = storyService.getStoryById(id);

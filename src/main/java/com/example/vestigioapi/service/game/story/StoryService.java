@@ -1,5 +1,6 @@
 package com.example.vestigioapi.service.game.story;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -45,6 +46,16 @@ public class StoryService {
             .stream()
             .map(this::toResponseDTO)
             .toList();
+    }
+
+    public List<StoryResponseDTO> findRandomStories(int count) {
+        List<Story> allStories = storyRepository.findAll();
+        Collections.shuffle(allStories);
+        System.out.println(allStories.size());
+        return allStories.stream()
+                .limit(count)
+                .map(this::toResponseDTO)
+                .toList();
     }
 
     public StoryResponseDTO updateStory(Long id, StoryCreateDTO dto) {
