@@ -1,9 +1,12 @@
 package com.example.vestigioapi.dto.auth;
 
 import com.example.vestigioapi.util.ValidationMessages;
+import com.example.vestigioapi.util.ValidationParam;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
     @NotBlank(message = ValidationMessages.NAME_REQUIRED)
@@ -14,5 +17,10 @@ public record RegisterRequest(
     String email,
     
     @NotBlank(message = ValidationMessages.PASSWORD_REQUIRED)
+    @Size(min = ValidationParam.PASSWORD_MIN, message = ValidationMessages.PASSWORD_MIN)
+    @Pattern(
+        regexp = ValidationParam.PASSWORD_REGEX,
+        message = ValidationMessages.PASSWORD_PATTERN
+    )
     String password
 ) {}

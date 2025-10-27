@@ -28,15 +28,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(withDefaults())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
-
-                .requestMatchers("/api/auth/**").permitAll()
-
-                .requestMatchers("/ws/**").permitAll() 
-
-                .requestMatchers("/api/users/me").authenticated()
-                .requestMatchers("/api/admin/**").hasAuthority(Role.ADMIN.name())
-                .requestMatchers("/api/player/**").hasAuthority(Role.PLAYER.name())
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/api/v1/users/me").authenticated()
+                .requestMatchers("/api/v1/admin/**").hasAuthority(Role.ADMIN.name())
+                .requestMatchers("/api/v1/player/**").hasAuthority(Role.PLAYER.name())
 
                 .anyRequest().authenticated()
             )
