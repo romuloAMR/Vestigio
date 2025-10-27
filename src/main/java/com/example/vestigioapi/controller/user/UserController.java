@@ -1,8 +1,8 @@
 package com.example.vestigioapi.controller.user;
 
+import com.example.vestigioapi.dto.user.UserResponseDTO;
 import com.example.vestigioapi.dto.user.PasswordUpdateDTO;
 import com.example.vestigioapi.dto.user.UserDeletionDTO;
-import com.example.vestigioapi.dto.user.UserResponseDTO;
 import com.example.vestigioapi.dto.user.UserUpdateRequestDTO;
 import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.repository.UserRepository;
@@ -46,8 +46,7 @@ public class UserController {
             currentUser.getCreatedAt(),
             currentUser.getUpdatedAt()
         );
-        return ResponseEntity
-            .ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/me")

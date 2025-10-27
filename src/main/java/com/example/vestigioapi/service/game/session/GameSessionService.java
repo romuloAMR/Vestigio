@@ -1,10 +1,13 @@
 package com.example.vestigioapi.service.game.session;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
+import com.example.vestigioapi.dto.game.move.AnswerQuestionRequestDTO;
+import com.example.vestigioapi.dto.game.move.AskQuestionRequestDTO;
 import com.example.vestigioapi.dto.game.session.GameSessionCreateDTO;
 import com.example.vestigioapi.dto.game.session.GameSessionResponseDTO;
 import com.example.vestigioapi.dto.game.session.PlayerDTO;
@@ -13,10 +16,12 @@ import com.example.vestigioapi.model.game.session.GameSession;
 import com.example.vestigioapi.model.game.session.GameStatus;
 import com.example.vestigioapi.model.game.story.Story;
 import com.example.vestigioapi.model.user.User;
+import com.example.vestigioapi.model.game.move.Move;
 import com.example.vestigioapi.repository.GameSessionRepository;
 import com.example.vestigioapi.repository.StoryRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -87,5 +92,100 @@ public class GameSessionService {
                         .collect(Collectors.toSet()),
                 session.getCreatedAt()
         );
-    }   
+    }
+
+    @Transactional
+    public GameSessionResponseDTO endGame(String roomCode, User user) {
+        GameSession session = gameSessionRepository.findByRoomCode(roomCode)
+            .orElseThrow(() -> new EntityNotFoundException("Sessão de jogo não encontrada com o código: " + roomCode));
+
+        if (!session.getMaster().getId().equals(user.getId())) {
+            throw new SecurityException("Apenas o mestre pode encerrar o jogo.");
+        }
+
+        session.setStatus(GameStatus.COMPLETED);
+
+        GameSession savedSession = gameSessionRepository.save(session);
+        return toResponseDTO(savedSession);
+    }
+
+    @Transactional
+    public GameSessionResponseDTO askQuestion(String roomCode, AskQuestionRequestDTO dto, User author) {
+        GameSession session = findSessionByCodeOrThrow(roomCode);
+
+        if (session.getStatus() != GameStatus.IN_PROGRESS) {
+            throw new IllegalStateException("O jogo não está em andamento.");
+        }
+        if (session.getMaster().getId().equals(author.getId())) {
+            throw new IllegalStateException("O mestre não pode fazer perguntas.");
+        }
+        if (session.getPlayers().stream().noneMatch(p -> p.getId().equals(author.getId()))) {
+            throw new SecurityException("Este jogador não pertence à partida.");
+        }
+
+        Move newMove = new Move();
+        newMove.setQuestion(dto.questionText());
+        newMove.setAuthor(author);
+        newMove.setGameSession(session);
+
+        session.getMoves().add(newMove);
+        
+        GameSession updatedSession = gameSessionRepository.save(session);
+        return toResponseDTO(updatedSession);
+    }
+
+    @Transactional
+    public GameSessionResponseDTO answerQuestion(String roomCode, AnswerQuestionRequestDTO dto, User master) {
+        GameSession session = findSessionByCodeOrThrow(roomCode);
+
+        if (!session.getMaster().getId().equals(master.getId())) {
+            throw new SecurityException("Apenas o mestre pode responder perguntas.");
+        }
+
+        Move move = session.getMoves().stream()
+            .filter(m -> m.getId().equals(dto.moveId()))
+            .findFirst()
+            .orElseThrow(() -> new EntityNotFoundException("Pergunta (Move) não encontrada com o ID: " + dto.moveId()));
+        
+        if (move.getAnswer() != null) {
+            throw new IllegalStateException("Esta pergunta já foi respondida.");
+        }
+
+        move.setAnswer(dto.answer());
+        
+        GameSession updatedSession = gameSessionRepository.save(session);
+        return toResponseDTO(updatedSession);
+    }
+
+    private GameSession findSessionByCodeOrThrow(String roomCode) {
+        return gameSessionRepository.findByRoomCode(roomCode)
+                .orElseThrow(() -> new EntityNotFoundException("Sessão de jogo não encontrada com o código: " + roomCode));
+    }
+
+    @Transactional
+    public GameSessionResponseDTO selectStoryAndStartGame(String roomCode, Long storyId, User user) {
+        GameSession session = gameSessionRepository.findByRoomCode(roomCode)
+            .orElseThrow(() -> new EntityNotFoundException("Sessão de jogo não encontrada com o código: " + roomCode));
+
+        if (!session.getMaster().getId().equals(user.getId())) {
+            throw new SecurityException("Apenas o mestre pode iniciar o jogo.");
+        }
+        if (session.getStatus() != GameStatus.WAITING_FOR_STORY_SELECTION) {
+            throw new IllegalStateException("O jogo não está aguardando a seleção da história.");
+        }
+
+        Story chosenStory = session.getStoryOptions().stream()
+            .filter(s -> s.getId().equals(storyId))
+            .findFirst()
+            .orElseThrow(() -> new EntityNotFoundException("História selecionada não encontrada."));
+
+        storyRepository.save(chosenStory);
+
+        session.setStory(chosenStory);
+        session.setStatus(GameStatus.IN_PROGRESS);
+        session.setStoryOptions(new ArrayList<>());
+
+        GameSession savedSession = gameSessionRepository.save(session);
+        return toResponseDTO(savedSession);
+    }
 }

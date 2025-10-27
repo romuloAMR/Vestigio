@@ -21,6 +21,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -56,4 +57,8 @@ public class GameSession extends Auditable {
     @OneToMany(mappedBy = "gameSession", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Move> moves = new ArrayList<>();
+
+    @Transient
+    @Builder.Default
+    private List<Story> storyOptions = new ArrayList<>();
 }
