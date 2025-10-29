@@ -1,51 +1,79 @@
 package com.example.vestigioapi.service.ai;
 
-import com.example.vestigioapi.model.game.story.Difficulty;
-import com.example.vestigioapi.model.game.story.Genre;
+import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
 import com.example.vestigioapi.util.StoryPromptTemplates;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
+import com.google.genai.Client;
+import com.google.genai.types.GenerateContentResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-@Service
-@RequiredArgsConstructor
-public class AIService {
+import jakarta.annotation.PostConstruct;
 
-    private final ChatClient.Builder chatClientBuilder;
-    private ChatClient chatClient;
+@Service
+public class AIService {
+    private static final Logger log = LoggerFactory.getLogger(AIService.class);
+
+    private final Client geminiClient;
+
+    @Value("${application.ai.gemini.model:gemini-2.0-flash-exp}")
+    private String modelName;
+
+    public AIService(Client geminiClient) {
+        this.geminiClient = geminiClient;
+    }
 
     @PostConstruct
-    public void init() {
-        this.chatClient = chatClientBuilder.build();
+    private void init() {
+        log.info("AIService initialized with Gemini model: {}", modelName);
     }
-    
-    public String generateStoryEnigmaticSituation(String title, Genre genre, Difficulty difficulty) {
 
-        String userPromptContent = String.format(
+    public String generateStoryEnigmaticSituation(StoryAICreateDTO createDTO) {
+        log.info("Generating enigmatic situation for title: {}, genre: {}, difficulty: {}", 
+                 createDTO.title(), createDTO.genre(), createDTO.difficulty());
+
+        String prompt = String.format(
             StoryPromptTemplates.ENIGMATIC_SITUATION_PROMPT,
-            title,
-            genre.name(),
-            difficulty.name()
+            createDTO.title(),
+            createDTO.genre().name(),
+            createDTO.difficulty().name()
         );
+
+        GenerateContentResponse response = geminiClient.models.generateContent(
+            modelName,
+            prompt,
+            null
+        );
+
+        String generatedText = response.text();
         
-        return chatClient.prompt()
-            .user(userPromptContent)
-            .call()
-            .content();
+        log.info("Generated enigmatic situation with {} characters", 
+                 generatedText != null ? generatedText.length() : 0);
+        
+        return generatedText;
     }
 
-    public String generateStoryFullSolution(String title, String situation) {
-        
-        String userPromptContent = String.format(
+    public String generateFullSolution(String title, String enigmaticSituation) {
+        log.info("Generating full solution for title: {}", title);
+
+        String prompt = String.format(
             StoryPromptTemplates.FULL_SOLUTION_PROMPT,
             title,
-            situation
+            enigmaticSituation
         );
+
+        GenerateContentResponse response = geminiClient.models.generateContent(
+            modelName,
+            prompt,
+            null
+        );
+
+        String generatedText = response.text();
         
-        return chatClient.prompt()
-            .user(userPromptContent)
-            .call()
-            .content();
+        log.info("Generated full solution with {} characters", 
+                 generatedText != null ? generatedText.length() : 0);
+        
+        return generatedText;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.vestigioapi.dto.game.session;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
@@ -13,5 +14,7 @@ public record GameSessionResponseDTO(
     StoryResponseDTO story,
     PlayerDTO master,
     Set<PlayerDTO> players,
+    List<MoveDTO> moves,
+    List<StoryResponseDTO> storyOptions,
     LocalDateTime createdAt
 ) {}

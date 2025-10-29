@@ -46,8 +46,8 @@ public class StoryService {
         String title = dto.title();
         Genre genre = dto.genre();
         Difficulty difficulty = dto.difficulty();
-        String enigmaticSituation = aiService.generateStoryEnigmaticSituation(title, genre, difficulty);
-        String fullSolution = aiService.generateStoryFullSolution(title, enigmaticSituation);
+        String enigmaticSituation = aiService.generateStoryEnigmaticSituation(dto);
+        String fullSolution = aiService.generateFullSolution(title, enigmaticSituation);
 
         StoryCreateDTO fullStoryDTO = new StoryCreateDTO(
             title,
@@ -76,11 +76,37 @@ public class StoryService {
     public List<StoryResponseDTO> findRandomStories(int count) {
         List<Story> allStories = storyRepository.findAll();
         Collections.shuffle(allStories);
-        System.out.println(allStories.size());
-        return allStories.stream()
-                .limit(count)
-                .map(this::toResponseDTO)
-                .toList();
+
+        int desired = Math.max(0, count);
+        List<StoryResponseDTO> result = new java.util.ArrayList<>();
+
+        int takeFromDb = Math.min(2, allStories.size());
+        for (int i = 0; i < takeFromDb && result.size() < desired; i++) {
+            result.add(toResponseDTO(allStories.get(i)));
+        }
+
+        if (desired > result.size()) {
+           Genre genre = Genre.COMEDY;
+            Difficulty difficulty = Difficulty.EASY;
+            if (!allStories.isEmpty()) {
+                Story reference = allStories.get(0);
+                if (reference.getGenre() != null) genre = reference.getGenre();
+                if (reference.getDifficulty() != null) difficulty = reference.getDifficulty();
+            }
+
+            String title = "História gerada - " + System.currentTimeMillis();
+            StoryAICreateDTO aiDto = new StoryAICreateDTO(title, genre, difficulty);
+            StoryResponseDTO aiStory = createAIStory(aiDto, null);
+            result.add(aiStory);
+        }
+
+        int idx = takeFromDb;
+        while (result.size() < desired && idx < allStories.size()) {
+            result.add(toResponseDTO(allStories.get(idx)));
+            idx++;
+        }
+
+        return result;
     }
 
     public StoryResponseDTO updateStory(Long id, StoryCreateDTO dto) {

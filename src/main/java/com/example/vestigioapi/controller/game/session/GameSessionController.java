@@ -54,4 +54,13 @@ public class GameSessionController {
         return ResponseEntity
             .ok(response);
     }
+
+    @PostMapping("/{roomCode}/start-selection")
+    public ResponseEntity<GameSessionResponseDTO> startStorySelection(
+            @PathVariable String roomCode,
+            @AuthenticationPrincipal User user) {
+        
+        GameSessionResponseDTO response = gameSessionService.startStorySelection(roomCode, user);
+        return ResponseEntity.ok(response);
+    }
 }
