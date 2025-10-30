@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryCreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
+import com.example.vestigioapi.exception.BusinessRuleException;
 import com.example.vestigioapi.exception.ResourceNotFoundException;
 import com.example.vestigioapi.model.game.story.Difficulty;
 import com.example.vestigioapi.model.game.story.Genre;
@@ -28,6 +29,15 @@ public class StoryService {
     private final AIService aiService;
     
     public StoryResponseDTO createStory(StoryCreateDTO dto, User creator) {
+
+        Boolean isDangerous = aiService.storyEvaluation(dto.enigmaticSituation(), dto.fullSolution());
+
+        System.out.println("Danger: " + isDangerous);
+
+        if (isDangerous){
+            throw new BusinessRuleException(ErrorMessages.STORY_REJECTED);
+        }
+
         Story story = new Story();
         story.setTitle(dto.title());
         story.setEnigmaticSituation(dto.enigmaticSituation());

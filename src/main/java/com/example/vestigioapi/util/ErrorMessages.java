@@ -20,6 +20,7 @@ public class ErrorMessages {
     public static final String DELETE_PASSWORD_INCORRECT = "A senha fornecida está incorreta. A exclusão foi cancelada.";
 
     public static final String STORY_NOT_FOUND = "Estoria não encontrada";
+    public static final String STORY_REJECTED = "O texto fere as diretrizes de uso (direitos humanos)";
     public static final String INSUFFICIENT_STORIES = "Não há histórias suficientes disponíveis no sistema.";
     
     public static final String GAME_SESSION_NOT_FOUND = "Sessão de jogo não encontrada";

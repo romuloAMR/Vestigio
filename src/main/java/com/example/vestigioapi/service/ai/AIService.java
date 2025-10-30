@@ -48,4 +48,21 @@ public class AIService {
             .call()
             .content();
     }
+
+    public Boolean storyEvaluation(String enigmaticSituation, String fullSolution) {
+        
+        String userPromptContent = String.format(
+            StoryPromptTemplates.STORY_EVALUATION,
+            enigmaticSituation,
+            fullSolution
+        );
+        
+        String result = chatClient.prompt()
+            .user(userPromptContent)
+            .call()
+            .content();
+
+        System.out.println("String evaluation " + result);
+        return result.toLowerCase().contains("true");
+    }
 }
