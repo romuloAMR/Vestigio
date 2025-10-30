@@ -8,11 +8,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.vestigioapi.dto.game.move.AnswerQuestionRequestDTO;
 import com.example.vestigioapi.dto.game.move.AskQuestionRequestDTO;
+import com.example.vestigioapi.dto.game.session.GameEvent;
 import com.example.vestigioapi.dto.game.session.GameSessionCreateDTO;
 import com.example.vestigioapi.dto.game.session.GameSessionResponseDTO;
 import com.example.vestigioapi.dto.game.session.MoveDTO;
@@ -67,6 +70,7 @@ public class GameSessionService {
 
         return toResponseDTO(saved);
     }
+    private final SimpMessagingTemplate messagingTemplate;
 
     public GameSessionResponseDTO createGameSession(GameSessionCreateDTO dto, User master) {
         Story story = storyRepository.findById(dto.storyId())
@@ -115,6 +119,52 @@ public class GameSessionService {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND + " com código: " + roomCode));
         return toResponseDTO(session);
+    }
+
+    @Transactional
+    public GameSessionResponseDTO startGameSession(String roomCode, Long userId) {
+        GameSession session = gameSessionRepository.findByRoomCode(roomCode)
+                .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
+
+        if (!session.getMaster().getId().equals(userId)) {
+            throw new AccessDeniedException("Only the master can start the game session.");
+        }
+
+        if (session.getStatus() != GameStatus.WAITING_FOR_PLAYERS) {
+            throw new IllegalStateException("Game session is not waiting for players. Current status: " + session.getStatus());
+        }
+
+        session.setStatus(GameStatus.IN_PROGRESS);
+
+        GameSession startedSession = gameSessionRepository.save(session);
+
+        GameEvent<GameSession> event = new GameEvent<>("GAME_STARTED", startedSession);
+        messagingTemplate.convertAndSend("/topic/session/" + roomCode, event);
+
+        return toResponseDTO(startedSession);
+    }
+
+    @Transactional
+    public GameSessionResponseDTO finishGameSession(String roomCode, Long usuarioRequisitanteId) {
+        GameSession session = gameSessionRepository.findByRoomCode(roomCode)
+                .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
+
+        if (!session.getMaster().getId().equals(usuarioRequisitanteId)) {
+            throw new AccessDeniedException("Only the master can finish the game session.");
+        }
+
+        if (session.getStatus() != GameStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Game session is not in progress.");
+        }
+
+        session.setStatus(GameStatus.COMPLETED);
+
+        GameSession finishedSession = gameSessionRepository.save(session);
+
+        GameEvent<GameSessionResponseDTO> event = new GameEvent<>("GAME_FINISHED", toResponseDTO(finishedSession));
+        messagingTemplate.convertAndSend("/topic/session/" + roomCode, event);
+
+        return toResponseDTO(finishedSession);
     }
 
     private String generateUniqueRoomCode() {
