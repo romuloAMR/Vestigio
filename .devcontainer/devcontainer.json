@@ -1,0 +1,23 @@
+{
+	"name": "Vestigio",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"forwardPorts": [5432, 8080],
+	"postCreateCommand": "mvn --version",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"vscjava.vscode-java-pack",
+				"vscjava.vscode-spring-initializr",
+				"vscjava.vscode-spring-boot-dashboard",
+				"ms-azuretools.vscode-docker",
+				"vscjava.vscode-maven",
+				"ms-azuretools.vscode-containers",
+				"postman.postman-for-vscode",
+				"ms-ossdata.vscode-pgsql"
+			]
+		}
+	}
+	// "features": {}
+}

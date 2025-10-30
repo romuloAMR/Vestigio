@@ -1,0 +1,41 @@
+volumes:
+  vestigio-data:
+
+services:
+  app:
+    container_name: javadev
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_DB: postgres
+        POSTGRES_HOSTNAME: postgresdb
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    networks:
+      - dev-network
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+  db:
+    container_name: postgresdb
+    image: postgres:latest
+    restart: unless-stopped
+    volumes:
+      - vestigio-data:/var/lib/postgresql/18/main
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"   
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
