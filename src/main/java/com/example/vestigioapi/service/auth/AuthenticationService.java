@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 import com.example.vestigioapi.dto.auth.AuthenticationRequest;
 import com.example.vestigioapi.dto.auth.AuthenticationResponse;
 import com.example.vestigioapi.dto.auth.RegisterRequest;
+import com.example.vestigioapi.exception.BusinessRuleException;
+import com.example.vestigioapi.exception.ResourceNotFoundException;
 import com.example.vestigioapi.model.user.Role;
 import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.repository.UserRepository;
+import com.example.vestigioapi.util.ErrorMessages;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,12 +26,18 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(RegisterRequest request) {
+        
+        if (repository.findByEmail(request.email()).isPresent()) {
+            throw new BusinessRuleException(ErrorMessages.EMAIL_ALREADY_EXISTS); 
+        }
+        
         var user = User.builder()
                 .name(request.name())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .role(Role.PLAYER)
                 .build();
+        
         repository.save(user);
         var jwtToken = jwtService.generateToken(user);
         return new AuthenticationResponse(jwtToken);
@@ -42,7 +51,7 @@ public class AuthenticationService {
                 )
         );
         var user = repository.findByEmail(request.email())
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.EMAIL_NOT_FOUND));
         var jwtToken = jwtService.generateToken(user);
         return new AuthenticationResponse(jwtToken);
     }

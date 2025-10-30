@@ -17,17 +17,19 @@ import com.example.vestigioapi.dto.game.session.GameSessionResponseDTO;
 import com.example.vestigioapi.dto.game.session.MoveDTO;
 import com.example.vestigioapi.dto.game.session.PlayerDTO;
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
+import com.example.vestigioapi.exception.BusinessRuleException;
+import com.example.vestigioapi.exception.ForbiddenActionException;
+import com.example.vestigioapi.exception.ResourceNotFoundException;
 import com.example.vestigioapi.model.game.session.GameSession;
 import com.example.vestigioapi.model.game.session.GameStatus;
 import com.example.vestigioapi.model.game.story.Story;
-import com.example.vestigioapi.model.game.story.StoryStatus;
 import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.model.game.move.Move;
 import com.example.vestigioapi.repository.GameSessionRepository;
 import com.example.vestigioapi.repository.StoryRepository;
+import com.example.vestigioapi.util.ErrorMessages;
 import com.example.vestigioapi.repository.UserRepository;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -36,22 +38,21 @@ import lombok.RequiredArgsConstructor;
 public class GameSessionService {
     private final GameSessionRepository gameSessionRepository;
     private final StoryRepository storyRepository;
-    private final UserRepository userRepository; // <--- injetar repo de user
+    private final UserRepository userRepository;
 
     public GameSessionResponseDTO createGameSession(GameSessionCreateDTO dto, User master) {
         Story story = storyRepository.findById(dto.storyId())
-                .orElseThrow(() -> new EntityNotFoundException("Story not found with id: " + dto.storyId()));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + dto.storyId()));
 
-        // garantir que o master seja um User gerenciado (com id) vindo do DB
         User managedMaster = userRepository.findById(master.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User (master) not found with id: " + master.getId()));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MASTER_NOT_FOUND + " com id: " + master.getId()));
 
         GameSession session = new GameSession();
         session.setMaster(managedMaster);
         session.setStory(story);
         session.setStatus(GameStatus.WAITING_FOR_PLAYERS);
         session.setRoomCode(generateUniqueRoomCode());
-        session.getPlayers().add(managedMaster); // utilizar user gerenciado
+        session.getPlayers().add(managedMaster);
 
         GameSession savedSession = gameSessionRepository.save(session);
         return toResponseDTO(savedSession);
@@ -59,10 +60,10 @@ public class GameSessionService {
 
     public GameSessionResponseDTO joinGameSession(String roomCode, User player) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
-                .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND + " com código: " + roomCode));
 
         if (session.getStatus() != GameStatus.WAITING_FOR_PLAYERS) {
-            throw new IllegalStateException("Cannot join a game that has already started or finished.");
+            throw new BusinessRuleException(ErrorMessages.GAME_STATUS_INVALID_JOIN);
         }
 
         session.getPlayers().add(player);
@@ -72,7 +73,7 @@ public class GameSessionService {
 
     public GameSessionResponseDTO getGameSessionByRoomCode(String roomCode) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
-                .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND + " com código: " + roomCode));
         return toResponseDTO(session);
     }
 
@@ -113,14 +114,13 @@ public class GameSessionService {
                 ))
                 .collect(Collectors.toList());
 
-        // Map story options (do not include fullSolution)
         List<StoryResponseDTO> storyOptionsDTO = session.getStoryOptions() == null ? new ArrayList<>() :
             session.getStoryOptions().stream()
                 .map(s -> new StoryResponseDTO(
                     s.getId(),
                     s.getTitle(),
                     s.getEnigmaticSituation(),
-                    null, // do not send solution in options
+                    null,
                     s.getGenre(),
                     s.getDifficulty(),
                     s.getCreator() != null ? s.getCreator().getUsername() : "System"
@@ -143,10 +143,10 @@ public class GameSessionService {
     @Transactional
     public GameSessionResponseDTO endGame(String roomCode, User user) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
-            .orElseThrow(() -> new EntityNotFoundException("Sessão de jogo não encontrada com o código: " + roomCode));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND + " com código: " + roomCode));
 
         if (!session.getMaster().getId().equals(user.getId())) {
-            throw new SecurityException("Apenas o mestre pode encerrar o jogo.");
+            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ONLY_END);
         }
 
         session.setStatus(GameStatus.COMPLETED);
@@ -160,13 +160,13 @@ public class GameSessionService {
         GameSession session = findSessionByCodeOrThrow(roomCode);
 
         if (session.getStatus() != GameStatus.IN_PROGRESS) {
-            throw new IllegalStateException("O jogo não está em andamento.");
+            throw new BusinessRuleException(ErrorMessages.GAME_STATUS_NOT_IN_PROGRESS);
         }
         if (session.getMaster().getId().equals(author.getId())) {
-            throw new IllegalStateException("O mestre não pode fazer perguntas.");
+            throw new BusinessRuleException(ErrorMessages.FORBIDDEN_MASTER_ASK_QUESTION);
         }
         if (session.getPlayers().stream().noneMatch(p -> p.getId().equals(author.getId()))) {
-            throw new SecurityException("Este jogador não pertence à partida.");
+            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_PLAYER_NOT_IN_SESSION);
         }
 
         Move newMove = new Move();
@@ -185,16 +185,16 @@ public class GameSessionService {
         GameSession session = findSessionByCodeOrThrow(roomCode);
 
         if (!session.getMaster().getId().equals(master.getId())) {
-            throw new SecurityException("Apenas o mestre pode responder perguntas.");
+            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ONLY_ANSWER);
         }
 
         Move move = session.getMoves().stream()
             .filter(m -> m.getId().equals(dto.moveId()))
             .findFirst()
-            .orElseThrow(() -> new EntityNotFoundException("Pergunta (Move) não encontrada com o ID: " + dto.moveId()));
-
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MOVE_NOT_FOUND + " com o ID: " + dto.moveId()));
+        
         if (move.getAnswer() != null) {
-            throw new IllegalStateException("Esta pergunta já foi respondida.");
+            throw new BusinessRuleException(ErrorMessages.MOVE_ALREADY_ANSWERED);
         }
 
         move.setAnswer(dto.answer());
@@ -205,7 +205,7 @@ public class GameSessionService {
 
     private GameSession findSessionByCodeOrThrow(String roomCode) {
         return gameSessionRepository.findByRoomCode(roomCode)
-                .orElseThrow(() -> new EntityNotFoundException("Sessão de jogo não encontrada com o código: " + roomCode));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND + " com código: " + roomCode));
     }
 
     @Transactional
@@ -213,21 +213,21 @@ public class GameSessionService {
         GameSession session = findSessionByCodeOrThrow(roomCode);
 
         if (!session.getMaster().getId().equals(user.getId())) {
-            throw new SecurityException("Apenas o mestre pode iniciar a seleção.");
+            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ONLY_START);
         }
 
         if (session.getStatus() != GameStatus.WAITING_FOR_PLAYERS) {
-            throw new IllegalStateException("O jogo não está aguardando jogadores.");
+            throw new BusinessRuleException(ErrorMessages.GAME_STATUS_NOT_WAITING_PLAYERS);
         }
 
         if (session.getPlayers().size() < 2) {
-            throw new IllegalStateException("É necessário pelo menos 2 jogadores.");
+            throw new BusinessRuleException(ErrorMessages.GAME_REQUIRES_MIN_PLAYERS);
         }
 
         List<Story> allStories = storyRepository.findAll();
 
         if (allStories.size() < 3) {
-            throw new IllegalStateException("Não há histórias suficientes disponíveis no sistema.");
+            throw new BusinessRuleException(ErrorMessages.INSUFFICIENT_STORIES);
         }
 
         Collections.shuffle(allStories);
@@ -245,15 +245,15 @@ public class GameSessionService {
         GameSession session = findSessionByCodeOrThrow(roomCode);
 
         if (!session.getMaster().getId().equals(user.getId())) {
-            throw new SecurityException("Apenas o mestre pode selecionar a história.");
+            throw new BusinessRuleException(ErrorMessages.ONLY_MASTER_CAN_SELECT_STORY);
         }
 
         if (session.getStatus() != GameStatus.WAITING_FOR_STORY_SELECTION) {
-            throw new IllegalStateException("O jogo não está aguardando a seleção da história.");
+            throw new BusinessRuleException(ErrorMessages.GAME_STATUS_NOT_WAITING_FOR_STORY);
         }
 
         Story chosenStory = storyRepository.findById(storyId)
-            .orElseThrow(() -> new EntityNotFoundException("História não encontrada."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND));
 
         session.setStory(chosenStory);
         session.setStatus(GameStatus.IN_PROGRESS);

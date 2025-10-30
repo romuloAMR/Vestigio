@@ -2,13 +2,13 @@ package com.example.vestigioapi.service.game.story;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 
 import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryCreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
+import com.example.vestigioapi.exception.ResourceNotFoundException;
 import com.example.vestigioapi.model.game.story.Difficulty;
 import com.example.vestigioapi.model.game.story.Genre;
 import com.example.vestigioapi.model.game.story.Story;
@@ -16,6 +16,7 @@ import com.example.vestigioapi.model.game.story.StoryStatus;
 import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.repository.StoryRepository;
 import com.example.vestigioapi.service.ai.AIService;
+import com.example.vestigioapi.util.ErrorMessages;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,8 +47,8 @@ public class StoryService {
         String title = dto.title();
         Genre genre = dto.genre();
         Difficulty difficulty = dto.difficulty();
-        String enigmaticSituation = aiService.generateStoryEnigmaticSituation(dto);
-        String fullSolution = aiService.generateFullSolution(title, enigmaticSituation);
+        String enigmaticSituation = aiService.generateStoryEnigmaticSituation(title, genre, difficulty);
+        String fullSolution = aiService.generateStoryFullSolution(title, enigmaticSituation);
 
         StoryCreateDTO fullStoryDTO = new StoryCreateDTO(
             title,
@@ -62,7 +63,7 @@ public class StoryService {
 
     public StoryResponseDTO getStoryById(Long id) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new NoSuchElementException("Story not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
         return toResponseDTO(story);
     }
 
@@ -111,7 +112,7 @@ public class StoryService {
 
     public StoryResponseDTO updateStory(Long id, StoryCreateDTO dto) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new NoSuchElementException("Story not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
         story.setTitle(dto.title());
         story.setEnigmaticSituation(dto.enigmaticSituation());
         story.setFullSolution(dto.fullSolution());
@@ -123,7 +124,7 @@ public class StoryService {
 
     public void deleteStory(Long id) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new NoSuchElementException("Story not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
         
         storyRepository.delete(story);
     }
