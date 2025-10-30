@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/v1/users/me").authenticated()
                 .requestMatchers("/api/v1/admin/**").hasAuthority(Role.ADMIN.name())
-                .requestMatchers("/api/v1/player/**").hasAuthority(Role.PLAYER.name())
+                .requestMatchers("/api/v1/player/**").authenticated()
 
                 .anyRequest().authenticated()
             )

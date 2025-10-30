@@ -20,6 +20,7 @@ public class ErrorMessages {
     public static final String DELETE_PASSWORD_INCORRECT = "A senha fornecida está incorreta. A exclusão foi cancelada.";
 
     public static final String STORY_NOT_FOUND = "Estoria não encontrada";
+    public static final String INSUFFICIENT_STORIES = "Não há histórias suficientes disponíveis no sistema.";
     
     public static final String GAME_SESSION_NOT_FOUND = "Sessão de jogo não encontrada";
 
@@ -29,10 +30,15 @@ public class ErrorMessages {
     public static final String GAME_STATUS_INVALID_JOIN = "Não é possível entrar em um jogo que já começou ou terminou.";
     public static final String GAME_STATUS_NOT_IN_PROGRESS = "O jogo não está em andamento.";
     public static final String GAME_STATUS_NOT_WAITING_FOR_STORY = "O jogo não está aguardando a seleção da história.";
+    public static final String GAME_STATUS_NOT_WAITING_PLAYERS = "O jogo não está aguardando jogadores.";
+    public static final String GAME_REQUIRES_MIN_PLAYERS = "É necessário pelo menos 2 jogadores.";
 
     public static final String FORBIDDEN_MASTER_ONLY_END = "Apenas o mestre pode encerrar o jogo.";
     public static final String FORBIDDEN_MASTER_ONLY_ANSWER = "Apenas o mestre pode responder perguntas.";
     public static final String FORBIDDEN_MASTER_ONLY_START = "Apenas o mestre pode iniciar o jogo.";
     public static final String FORBIDDEN_PLAYER_NOT_IN_SESSION = "Este jogador não pertence à partida.";
     public static final String FORBIDDEN_MASTER_ASK_QUESTION = "O mestre não pode fazer perguntas.";
+    public static final String MASTER_NOT_FOUND = "O mestre não foi encontrado.";
+    public static final String ONLY_MASTER_CAN_SELECT_STORY = "Apenas o mestre pode selecionar a história.";
+
 }
