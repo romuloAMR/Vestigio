@@ -19,12 +19,14 @@ services:
       - dev-network
     depends_on:
       - db
+    ports:
+      - "8080:8080"
   db:
     container_name: postgresdb
     image: postgres:latest
     restart: unless-stopped
     volumes:
-      - vestigio-data:/var/lib/postgresql/data
+      - vestigio-data:/var/lib/postgresql/18/main
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
