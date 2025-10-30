@@ -45,6 +45,10 @@ public class GameSession extends Auditable {
     )
     private Set<User> players = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "winner_id")
+    private User winner;
+
     @OneToMany(mappedBy = "gameSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<com.example.vestigioapi.model.game.move.Move> moves = new ArrayList<>();
 
@@ -94,6 +98,14 @@ public class GameSession extends Auditable {
 
     public void setPlayers(Set<User> players) {
         this.players = players;
+    }
+
+    public User getWinner() {
+        return winner;
+    }
+
+    public void setWinner(User winner) {
+        this.winner = winner;
     }
 
     public List<com.example.vestigioapi.model.game.move.Move> getMoves() {

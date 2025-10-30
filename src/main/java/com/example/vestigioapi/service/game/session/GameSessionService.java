@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.vestigioapi.dto.game.move.AnswerQuestionRequestDTO;
 import com.example.vestigioapi.dto.game.move.AskQuestionRequestDTO;
@@ -20,7 +21,6 @@ import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
 import com.example.vestigioapi.model.game.session.GameSession;
 import com.example.vestigioapi.model.game.session.GameStatus;
 import com.example.vestigioapi.model.game.story.Story;
-import com.example.vestigioapi.model.game.story.StoryStatus;
 import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.model.game.move.Move;
 import com.example.vestigioapi.repository.GameSessionRepository;
@@ -28,7 +28,6 @@ import com.example.vestigioapi.repository.StoryRepository;
 import com.example.vestigioapi.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -36,13 +35,39 @@ import lombok.RequiredArgsConstructor;
 public class GameSessionService {
     private final GameSessionRepository gameSessionRepository;
     private final StoryRepository storyRepository;
-    private final UserRepository userRepository; // <--- injetar repo de user
+    private final UserRepository userRepository;
+
+
+    @Transactional
+    public GameSessionResponseDTO pickWinner(String roomCode, Long winnerId, User master) {
+        GameSession session = gameSessionRepository.findByRoomCode(roomCode)
+                .orElseThrow(() -> new IllegalArgumentException("Sessão não encontrada: " + roomCode));
+
+        if (!session.getMaster().getId().equals(master.getId())) {
+            throw new IllegalArgumentException("Apenas o mestre pode escolher o vencedor.");
+        }
+
+        User winner = userRepository.findById(winnerId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário (vencedor) não encontrado com id: " + winnerId));
+
+        boolean winnerIsPlayer = session.getPlayers().stream()
+                .anyMatch(p -> p.getId().equals(winner.getId()));
+
+        if (!winnerIsPlayer) {
+            throw new IllegalArgumentException("O usuário indicado não participa desta partida.");
+        }
+
+        session.setWinner(winner);
+        session.setStatus(GameStatus.COMPLETED);
+        GameSession saved = gameSessionRepository.save(session);
+
+        return toResponseDTO(saved);
+    }
 
     public GameSessionResponseDTO createGameSession(GameSessionCreateDTO dto, User master) {
         Story story = storyRepository.findById(dto.storyId())
                 .orElseThrow(() -> new EntityNotFoundException("Story not found with id: " + dto.storyId()));
 
-        // garantir que o master seja um User gerenciado (com id) vindo do DB
         User managedMaster = userRepository.findById(master.getId())
                 .orElseThrow(() -> new EntityNotFoundException("User (master) not found with id: " + master.getId()));
 
@@ -51,12 +76,13 @@ public class GameSessionService {
         session.setStory(story);
         session.setStatus(GameStatus.WAITING_FOR_PLAYERS);
         session.setRoomCode(generateUniqueRoomCode());
-        session.getPlayers().add(managedMaster); // utilizar user gerenciado
+        session.getPlayers().add(managedMaster);
 
         GameSession savedSession = gameSessionRepository.save(session);
         return toResponseDTO(savedSession);
     }
 
+    @Transactional
     public GameSessionResponseDTO joinGameSession(String roomCode, User player) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
                 .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
@@ -65,11 +91,22 @@ public class GameSessionService {
             throw new IllegalStateException("Cannot join a game that has already started or finished.");
         }
 
-        session.getPlayers().add(player);
+        User managedPlayer = userRepository.findById(player.getId())
+                .orElseThrow(() -> new EntityNotFoundException("User (player) not found with id: " + player.getId()));
+
+        if (session.getPlayers().stream().noneMatch(p -> p.getId().equals(managedPlayer.getId()))) {
+            session.getPlayers().add(managedPlayer);
+        }
+
+        if (session.getStory() != null && session.getPlayers().size() >= 2) {
+            session.setStatus(GameStatus.IN_PROGRESS);
+        }
+
         GameSession updatedSession = gameSessionRepository.save(session);
         return toResponseDTO(updatedSession);
     }
 
+    @Transactional(readOnly = true)
     public GameSessionResponseDTO getGameSessionByRoomCode(String roomCode) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
                 .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
@@ -113,19 +150,22 @@ public class GameSessionService {
                 ))
                 .collect(Collectors.toList());
 
-        // Map story options (do not include fullSolution)
         List<StoryResponseDTO> storyOptionsDTO = session.getStoryOptions() == null ? new ArrayList<>() :
             session.getStoryOptions().stream()
                 .map(s -> new StoryResponseDTO(
                     s.getId(),
                     s.getTitle(),
                     s.getEnigmaticSituation(),
-                    null, // do not send solution in options
+                    null,
                     s.getGenre(),
                     s.getDifficulty(),
                     s.getCreator() != null ? s.getCreator().getUsername() : "System"
                 ))
                 .collect(Collectors.toList());
+
+        PlayerDTO winnerDTO = session.getWinner() != null
+            ? new PlayerDTO(session.getWinner().getId(), session.getWinner().getUsername())
+            : null;
 
         return new GameSessionResponseDTO(
                 session.getId(),
@@ -136,6 +176,7 @@ public class GameSessionService {
                 playersDTO,
                 movesDTO,
                 storyOptionsDTO,
+                winnerDTO,
                 session.getCreatedAt()
         );
     }
