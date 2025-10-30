@@ -1,14 +1,19 @@
+spring.application.name=vestigio
+
 spring.datasource.url=jdbc:postgresql://${POSTGRES_HOST:db}:${POSTGRES_PORT:5432}/${POSTGRES_DB:postgresdb}
 spring.datasource.username=${POSTGRES_USER:postgres}
 spring.datasource.password=${POSTGRES_PASSWORD:admin123}
 
 spring.jpa.hibernate.ddl-auto=${JPA_DDL_AUTO:create-drop}
 spring.jpa.show-sql=${JPA_SHOW_SQL:true}
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.properties.hibernate.format_sql=${JPA_FORMAT_SQL:true}
 
 application.security.jwt.secret-key=XXXXXXXXXXXX
 application.security.jwt.expiration=XXXXXXXXXXXX
 
+spring.jackson.serialization.indent-output=true
+
 spring.ai.vertex.ai.gemini.project-id=XXXXXXXXXXXX
 spring.ai.vertex.ai.gemini.location=XXXXXXXXXXXX
+
+logging.level.com.example.vestigioapi=INFO

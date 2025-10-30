@@ -21,6 +21,7 @@ Before you begin, make sure you have the following installed:
 
 - [Docker](https://www.docker.com/)
 - [Dev Containers extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- [Gcloud account and project id](https://cloud.google.com/?hl=pt-BR)
 
 ## 🧪 **Getting Started**
 
@@ -43,4 +44,4 @@ Before you begin, make sure you have the following installed:
 
 ## 📚 **Additional Notes**
 
-- This repository is configured to provide a consistent and isolated development environment, ideal for collaborating on academic or professional projects related to numerical methods.
+- This repository was created to run the application in an isolated and consistent manner.

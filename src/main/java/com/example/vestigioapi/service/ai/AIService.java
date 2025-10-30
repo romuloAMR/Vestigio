@@ -1,79 +1,91 @@
 package com.example.vestigioapi.service.ai;
 
-import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
+import com.example.vestigioapi.model.game.story.Difficulty;
+import com.example.vestigioapi.model.game.story.Genre;
 import com.example.vestigioapi.util.StoryPromptTemplates;
-import com.google.genai.Client;
-import com.google.genai.types.GenerateContentResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
-
 @Service
+@RequiredArgsConstructor
 public class AIService {
-    private static final Logger log = LoggerFactory.getLogger(AIService.class);
 
-    private final Client geminiClient;
-
-    @Value("${application.ai.gemini.model:gemini-2.0-flash-exp}")
-    private String modelName;
-
-    public AIService(Client geminiClient) {
-        this.geminiClient = geminiClient;
-    }
+    private final ChatClient.Builder chatClientBuilder;
+    private ChatClient chatClient;
 
     @PostConstruct
-    private void init() {
-        log.info("AIService initialized with Gemini model: {}", modelName);
+    public void init() {
+        this.chatClient = chatClientBuilder.build();
     }
+    
+    public String generateStoryEnigmaticSituation(String title, Genre genre, Difficulty difficulty) {
 
-    public String generateStoryEnigmaticSituation(StoryAICreateDTO createDTO) {
-        log.info("Generating enigmatic situation for title: {}, genre: {}, difficulty: {}", 
-                 createDTO.title(), createDTO.genre(), createDTO.difficulty());
-
-        String prompt = String.format(
+        String userPromptContent = String.format(
             StoryPromptTemplates.ENIGMATIC_SITUATION_PROMPT,
-            createDTO.title(),
-            createDTO.genre().name(),
-            createDTO.difficulty().name()
+            title,
+            genre.name(),
+            difficulty.name()
         );
-
-        GenerateContentResponse response = geminiClient.models.generateContent(
-            modelName,
-            prompt,
-            null
-        );
-
-        String generatedText = response.text();
         
-        log.info("Generated enigmatic situation with {} characters", 
-                 generatedText != null ? generatedText.length() : 0);
-        
-        return generatedText;
+        String result = chatClient.prompt()
+            .user(userPromptContent)
+            .call()
+            .content();
+
+        return cleanMarkdown(result);
     }
 
-    public String generateFullSolution(String title, String enigmaticSituation) {
-        log.info("Generating full solution for title: {}", title);
-
-        String prompt = String.format(
+    public String generateStoryFullSolution(String title, String situation) {
+        
+        String userPromptContent = String.format(
             StoryPromptTemplates.FULL_SOLUTION_PROMPT,
             title,
-            enigmaticSituation
+            situation
         );
+        
+        String result = chatClient.prompt()
+            .user(userPromptContent)
+            .call()
+            .content();
 
-        GenerateContentResponse response = geminiClient.models.generateContent(
-            modelName,
-            prompt,
-            null
+        return cleanMarkdown(result);
+    }
+
+    public Boolean storyEvaluation(String enigmaticSituation, String fullSolution) {
+        
+        String userPromptContent = String.format(
+            StoryPromptTemplates.STORY_EVALUATION,
+            enigmaticSituation,
+            fullSolution
         );
+        
+        String result = chatClient.prompt()
+            .user(userPromptContent)
+            .call()
+            .content();
 
-        String generatedText = response.text();
-        
-        log.info("Generated full solution with {} characters", 
-                 generatedText != null ? generatedText.length() : 0);
-        
-        return generatedText;
+        System.out.println("String evaluation " + result);
+        return result.toLowerCase().contains("true");
+    }
+
+    private String cleanMarkdown(String markdownText) {
+        if (markdownText == null || markdownText.isEmpty()) {
+            return "";
+        }
+
+        String cleanedText = markdownText;
+
+        cleanedText = cleanedText.replaceAll("^\\s*#+\\s*.*\\n?", "");
+        cleanedText = cleanedText.replaceAll("[*_]{1,2}", "");
+        cleanedText = cleanedText.replaceAll("^[\\s]*[-*+]\\s", "");
+        cleanedText = cleanedText.replaceAll("^[\\s]*\\d+\\.\\s", "");
+        cleanedText = cleanedText.replaceAll("^>\\s*", "");
+        cleanedText = cleanedText.replaceAll("^[-*]{3,}\\n?", "");
+        cleanedText = cleanedText.replaceAll("(?m)^\\s*$\\n", "");
+        cleanedText = cleanedText.trim();
+
+        return cleanedText;
     }
 }
