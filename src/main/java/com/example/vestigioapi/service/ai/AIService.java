@@ -29,10 +29,12 @@ public class AIService {
             difficulty.name()
         );
         
-        return chatClient.prompt()
+        String result = chatClient.prompt()
             .user(userPromptContent)
             .call()
             .content();
+
+        return cleanMarkdown(result);
     }
 
     public String generateStoryFullSolution(String title, String situation) {
@@ -43,9 +45,47 @@ public class AIService {
             situation
         );
         
-        return chatClient.prompt()
+        String result = chatClient.prompt()
             .user(userPromptContent)
             .call()
             .content();
+
+        return cleanMarkdown(result);
+    }
+
+    public Boolean storyEvaluation(String enigmaticSituation, String fullSolution) {
+        
+        String userPromptContent = String.format(
+            StoryPromptTemplates.STORY_EVALUATION,
+            enigmaticSituation,
+            fullSolution
+        );
+        
+        String result = chatClient.prompt()
+            .user(userPromptContent)
+            .call()
+            .content();
+
+        System.out.println("String evaluation " + result);
+        return result.toLowerCase().contains("true");
+    }
+
+    private String cleanMarkdown(String markdownText) {
+        if (markdownText == null || markdownText.isEmpty()) {
+            return "";
+        }
+
+        String cleanedText = markdownText;
+
+        cleanedText = cleanedText.replaceAll("^\\s*#+\\s*.*\\n?", "");
+        cleanedText = cleanedText.replaceAll("[*_]{1,2}", "");
+        cleanedText = cleanedText.replaceAll("^[\\s]*[-*+]\\s", "");
+        cleanedText = cleanedText.replaceAll("^[\\s]*\\d+\\.\\s", "");
+        cleanedText = cleanedText.replaceAll("^>\\s*", "");
+        cleanedText = cleanedText.replaceAll("^[-*]{3,}\\n?", "");
+        cleanedText = cleanedText.replaceAll("(?m)^\\s*$\\n", "");
+        cleanedText = cleanedText.trim();
+
+        return cleanedText;
     }
 }
