@@ -16,5 +16,6 @@ public record GameSessionResponseDTO(
     Set<PlayerDTO> players,
     List<MoveDTO> moves,
     List<StoryResponseDTO> storyOptions,
+    PlayerDTO winner,
     LocalDateTime createdAt
 ) {}

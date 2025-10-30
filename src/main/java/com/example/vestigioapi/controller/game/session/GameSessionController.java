@@ -1,23 +1,18 @@
 package com.example.vestigioapi.controller.game.session;
 
-import java.net.URI;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.example.vestigioapi.dto.game.session.GameSessionCreateDTO;
 import com.example.vestigioapi.dto.game.session.GameSessionResponseDTO;
 import com.example.vestigioapi.model.user.User;
+import com.example.vestigioapi.repository.UserRepository;
 import com.example.vestigioapi.service.game.session.GameSessionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/player/game-sessions")
@@ -25,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 public class GameSessionController {
 
     private final GameSessionService gameSessionService;
+    private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping
     public ResponseEntity<GameSessionResponseDTO> createGame(
@@ -32,6 +29,8 @@ public class GameSessionController {
             @AuthenticationPrincipal User master) {
 
         GameSessionResponseDTO response = gameSessionService.createGameSession(createDTO, master);
+
+        messagingTemplate.convertAndSend("/topic/game/" + response.roomCode(), response);
 
         return ResponseEntity
             .created(URI.create("/api/v1/player/game-sessions/" + response.roomCode())) 
@@ -44,6 +43,9 @@ public class GameSessionController {
             @AuthenticationPrincipal User player) {
         
         GameSessionResponseDTO response = gameSessionService.joinGameSession(roomCode, player);
+
+        messagingTemplate.convertAndSend("/topic/game/" + response.roomCode(), response);
+
         return ResponseEntity
             .ok(response);
     }
