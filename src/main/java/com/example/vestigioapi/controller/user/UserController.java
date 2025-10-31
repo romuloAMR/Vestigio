@@ -5,14 +5,12 @@ import com.example.vestigioapi.dto.user.PasswordUpdateDTO;
 import com.example.vestigioapi.dto.user.UserDeletionDTO;
 import com.example.vestigioapi.dto.user.UserUpdateRequestDTO;
 import com.example.vestigioapi.model.user.User;
-import com.example.vestigioapi.repository.UserRepository;
 import com.example.vestigioapi.service.user.UserService;
 
 import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
@@ -26,15 +24,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository repository;
-    private final UserService userService;    
-
-    // Temporario
-    @GetMapping
-    public ResponseEntity<List<User>> getAll() {
-        final List<User> users = repository.findAll();
-        return ResponseEntity.ok(users);
-    }
+    private final UserService userService;
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> getMe(@AuthenticationPrincipal User currentUser) {

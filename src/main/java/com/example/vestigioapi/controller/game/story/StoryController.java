@@ -60,29 +60,32 @@ public class StoryController {
             .ok(response);
     }
 
-    // FIX: Mudar para as do Usuario
     @GetMapping
-    public ResponseEntity<List<StoryResponseDTO>> getAllStories() {
-        List<StoryResponseDTO> stories = storyService.getAllStories();
+    public ResponseEntity<List<StoryResponseDTO>> getMyStories(
+        @AuthenticationPrincipal User creator
+    ) {
+        List<StoryResponseDTO> stories = storyService.getStoriesByCreator(creator);
         return ResponseEntity
             .ok(stories);
     }
 
-    // FIX: Validar Usuario
     @PutMapping("/{id}")
     public ResponseEntity<StoryResponseDTO> updateStory(
         @PathVariable Long id,
-        @Valid @RequestBody StoryCreateDTO dto
+        @Valid @RequestBody StoryCreateDTO dto,
+        @AuthenticationPrincipal User creator
     ) {
-        StoryResponseDTO response = storyService.updateStory(id, dto);
+        StoryResponseDTO response = storyService.updateStory(id, dto, creator);
         return ResponseEntity
             .ok(response);
     }
 
-    // FIX: Validar Usuario
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStory(@PathVariable Long id) {
-        storyService.deleteStory(id);
+    public ResponseEntity<Void> deleteStory(
+        @PathVariable Long id,
+        @AuthenticationPrincipal User creator
+    ) {
+        storyService.deleteStory(id, creator);
         return ResponseEntity
             .noContent()
             .build();

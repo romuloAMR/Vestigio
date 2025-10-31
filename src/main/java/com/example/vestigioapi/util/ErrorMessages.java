@@ -11,7 +11,7 @@ public class ErrorMessages {
 
     public static final String USER_NOT_FOUND = "Usuário não encontrado.";
 
-     public static final String EMAIL_NOT_FOUND = "Email não encontrado.";
+    public static final String EMAIL_NOT_FOUND = "Email não encontrado.";
     public static final String EMAIL_ALREADY_EXISTS = "Email já está em uso.";
 
     public static final String INCORRECT_PASSWORD = "A senha está incorreta.";
@@ -22,6 +22,7 @@ public class ErrorMessages {
     public static final String STORY_NOT_FOUND = "Estoria não encontrada";
     public static final String STORY_REJECTED = "O texto fere as diretrizes de uso (direitos humanos)";
     public static final String INSUFFICIENT_STORIES = "Não há histórias suficientes disponíveis no sistema.";
+    public static final String UNAUTHORIZED_ACTION_IN_STORY = "Você não tem permissão para modificar a estória.";
     
     public static final String GAME_SESSION_NOT_FOUND = "Sessão de jogo não encontrada";
 
