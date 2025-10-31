@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +33,6 @@ import com.example.vestigioapi.repository.StoryRepository;
 import com.example.vestigioapi.util.ErrorMessages;
 import com.example.vestigioapi.repository.UserRepository;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -43,25 +41,26 @@ public class GameSessionService {
     private final GameSessionRepository gameSessionRepository;
     private final StoryRepository storyRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     @Transactional
     public GameSessionResponseDTO pickWinner(String roomCode, Long winnerId, User master) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
-                .orElseThrow(() -> new IllegalArgumentException("Sessão não encontrada: " + roomCode));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_NOT_FOUND));
 
         if (!session.getMaster().getId().equals(master.getId())) {
-            throw new IllegalArgumentException("Apenas o mestre pode escolher o vencedor.");
+            throw new BusinessRuleException(ErrorMessages.FORBIDDEN_MASTER_ONLY_DEF_WINNER);
         }
 
         User winner = userRepository.findById(winnerId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário (vencedor) não encontrado com id: " + winnerId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.WINNER_NOT_FOUND));
 
         boolean winnerIsPlayer = session.getPlayers().stream()
                 .anyMatch(p -> p.getId().equals(winner.getId()));
 
         if (!winnerIsPlayer) {
-            throw new IllegalArgumentException("O usuário indicado não participa desta partida.");
+            throw new ResourceNotFoundException(ErrorMessages.FORBIDDEN_PLAYER_NOT_IN_SESSION);
         }
 
         session.setWinner(winner);
@@ -70,7 +69,6 @@ public class GameSessionService {
 
         return toResponseDTO(saved);
     }
-    private final SimpMessagingTemplate messagingTemplate;
 
     public GameSessionResponseDTO createGameSession(GameSessionCreateDTO dto, User master) {
         Story story = storyRepository.findById(dto.storyId())
@@ -100,7 +98,7 @@ public class GameSessionService {
         }
 
         User managedPlayer = userRepository.findById(player.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User (player) not found with id: " + player.getId()));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
         if (session.getPlayers().stream().noneMatch(p -> p.getId().equals(managedPlayer.getId()))) {
             session.getPlayers().add(managedPlayer);
@@ -124,14 +122,14 @@ public class GameSessionService {
     @Transactional
     public GameSessionResponseDTO startGameSession(String roomCode, Long userId) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
-                .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_NOT_FOUND));
 
         if (!session.getMaster().getId().equals(userId)) {
-            throw new AccessDeniedException("Only the master can start the game session.");
+            throw new BusinessRuleException(ErrorMessages.FORBIDDEN_MASTER_ONLY_START);
         }
 
         if (session.getStatus() != GameStatus.WAITING_FOR_PLAYERS) {
-            throw new IllegalStateException("Game session is not waiting for players. Current status: " + session.getStatus());
+            throw new BusinessRuleException(ErrorMessages.GAME_STATUS_NOT_WAITING_PLAYERS);
         }
 
         session.setStatus(GameStatus.IN_PROGRESS);
@@ -147,14 +145,14 @@ public class GameSessionService {
     @Transactional
     public GameSessionResponseDTO finishGameSession(String roomCode, Long usuarioRequisitanteId) {
         GameSession session = gameSessionRepository.findByRoomCode(roomCode)
-                .orElseThrow(() -> new EntityNotFoundException("Game session not found with room code: " + roomCode));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_NOT_FOUND));
 
         if (!session.getMaster().getId().equals(usuarioRequisitanteId)) {
-            throw new AccessDeniedException("Only the master can finish the game session.");
+            throw new BusinessRuleException(ErrorMessages.FORBIDDEN_MASTER_ONLY_END);
         }
 
         if (session.getStatus() != GameStatus.IN_PROGRESS) {
-            throw new IllegalStateException("Game session is not in progress.");
+            throw new BusinessRuleException(ErrorMessages.GAME_STATUS_NOT_IN_PROGRESS);
         }
 
         session.setStatus(GameStatus.COMPLETED);

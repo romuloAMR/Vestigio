@@ -5,8 +5,9 @@ import com.example.vestigioapi.dto.game.move.AskQuestionRequestDTO;
 import com.example.vestigioapi.dto.game.session.GameSessionResponseDTO;
 import com.example.vestigioapi.dto.game.session.PickWinnerRequestDTO;
 import com.example.vestigioapi.model.user.User;
-import com.example.vestigioapi.repository.UserRepository;
 import com.example.vestigioapi.service.game.session.GameSessionService;
+import com.example.vestigioapi.service.user.UserService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -24,14 +25,14 @@ public class GameWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final GameSessionService gameSessionService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @MessageMapping("/game/{roomCode}/select-story")
     public void selectStory(@DestinationVariable String roomCode, 
                             @Payload Long storyId, 
                             Principal principal) {
         
-        User user = getUserFromPrincipal(principal);
+        User user = userService.getAuthenticatedUser(principal);
         GameSessionResponseDTO updatedGame = gameSessionService.selectStoryAndStartGame(roomCode, storyId, user);
         
         broadcastGameState(roomCode, updatedGame);
@@ -42,7 +43,7 @@ public class GameWebSocketController {
                             @Payload AskQuestionRequestDTO dto, 
                             Principal principal) {
         
-        User user = getUserFromPrincipal(principal);
+        User user = userService.getAuthenticatedUser(principal);
         GameSessionResponseDTO updatedGame = gameSessionService.askQuestion(roomCode, dto, user);
         
         broadcastGameState(roomCode, updatedGame);
@@ -58,7 +59,7 @@ public class GameWebSocketController {
                                @Payload AnswerQuestionRequestDTO dto, 
                                Principal principal) {
         
-        User user = getUserFromPrincipal(principal);
+        User user = userService.getAuthenticatedUser(principal);
         GameSessionResponseDTO updatedGame = gameSessionService.answerQuestion(roomCode, dto, user);
 
         broadcastGameState(roomCode, updatedGame);
@@ -68,14 +69,14 @@ public class GameWebSocketController {
     public void pickWinner(@DestinationVariable String roomCode,
                            @Payload PickWinnerRequestDTO dto,
                            Principal principal) {
-        User user = getUserFromPrincipal(principal);
+        User user = userService.getAuthenticatedUser(principal);
         GameSessionResponseDTO updatedGame = gameSessionService.pickWinner(roomCode, dto.winnerId(), user);
         broadcastGameState(roomCode, updatedGame);
     }
     
     @MessageMapping("/game/{roomCode}/end")
         public void endGame(@DestinationVariable String roomCode, Principal principal) {
-            User user = getUserFromPrincipal(principal);
+            User user = userService.getAuthenticatedUser(principal);
             GameSessionResponseDTO updatedGame = gameSessionService.endGame(roomCode, user);
             
             broadcastGameState(roomCode, updatedGame);
@@ -83,13 +84,5 @@ public class GameWebSocketController {
 
     private void broadcastGameState(String roomCode, GameSessionResponseDTO gameSession) {
         messagingTemplate.convertAndSend("/topic/game/" + roomCode, gameSession);
-    }
-
-    private User getUserFromPrincipal(Principal principal) {
-        if (principal == null || principal.getName() == null) {
-            throw new IllegalArgumentException("Usuário não autenticado no WebSocket.");
-        }
-        return userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + principal.getName()));
     }
 }
