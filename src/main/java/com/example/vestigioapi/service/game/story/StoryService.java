@@ -9,6 +9,7 @@ import com.example.vestigioapi.dto.game.story.StoryAICreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryCreateDTO;
 import com.example.vestigioapi.dto.game.story.StoryResponseDTO;
 import com.example.vestigioapi.exception.BusinessRuleException;
+import com.example.vestigioapi.exception.ForbiddenActionException;
 import com.example.vestigioapi.exception.ResourceNotFoundException;
 import com.example.vestigioapi.model.game.story.Difficulty;
 import com.example.vestigioapi.model.game.story.Genre;
@@ -77,8 +78,8 @@ public class StoryService {
         return toResponseDTO(story);
     }
 
-    public List<StoryResponseDTO> getAllStories() {
-        return storyRepository.findAll()
+    public List<StoryResponseDTO> getStoriesByCreator(User creator) {
+        return storyRepository.findByCreator(creator)
             .stream()
             .map(this::toResponseDTO)
             .toList();
@@ -120,9 +121,12 @@ public class StoryService {
         return result;
     }
 
-    public StoryResponseDTO updateStory(Long id, StoryCreateDTO dto) {
+    public StoryResponseDTO updateStory(Long id, StoryCreateDTO dto, User creator) {
         Story story = storyRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
+
+        validateStoryOwnership(story, creator);
+        
         story.setTitle(dto.title());
         story.setEnigmaticSituation(dto.enigmaticSituation());
         story.setFullSolution(dto.fullSolution());
@@ -132,11 +136,19 @@ public class StoryService {
         return toResponseDTO(updatedStory);
     }
 
-    public void deleteStory(Long id) {
+    public void deleteStory(Long id, User creator) {
         Story story = storyRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
         
+        validateStoryOwnership(story, creator);
+
         storyRepository.delete(story);
+    }
+
+    private void validateStoryOwnership(Story story, User creator) {
+        if (story.getCreator() == null || !story.getCreator().getId().equals(creator.getId())) {
+            throw new ForbiddenActionException(ErrorMessages.UNAUTHORIZED_ACTION_IN_STORY);
+        }
     }
 
     private StoryResponseDTO toResponseDTO(Story story) {

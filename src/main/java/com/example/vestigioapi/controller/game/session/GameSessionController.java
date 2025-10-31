@@ -3,8 +3,6 @@ package com.example.vestigioapi.controller.game.session;
 import com.example.vestigioapi.dto.game.session.GameSessionCreateDTO;
 import com.example.vestigioapi.dto.game.session.GameSessionResponseDTO;
 import com.example.vestigioapi.model.user.User;
-import com.example.vestigioapi.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,16 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.vestigioapi.dto.game.move.AnswerRequestDTO;
 import com.example.vestigioapi.dto.game.move.MoveResponseDTO;
 import com.example.vestigioapi.dto.game.move.QuestionRequestDTO;
-import com.example.vestigioapi.dto.game.session.GameSessionCreateDTO;
-import com.example.vestigioapi.dto.game.session.GameSessionResponseDTO;
-import com.example.vestigioapi.model.user.User;
 import com.example.vestigioapi.service.game.move.MoveService;
 import com.example.vestigioapi.service.game.session.GameSessionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -39,7 +30,6 @@ import java.net.URI;
 public class GameSessionController {
 
     private final GameSessionService gameSessionService;
-    private final UserRepository userRepository;
     private final MoveService jogadaService;
     private final SimpMessagingTemplate messagingTemplate;
 

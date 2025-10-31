@@ -1,5 +1,7 @@
 package com.example.vestigioapi.service.user;
 
+import java.security.Principal;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -100,5 +102,14 @@ public class UserService {
         }
 
         userRepository.delete(user);
+    }
+
+    public User getAuthenticatedUser(Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            throw new BusinessRuleException(ErrorMessages.USER_UNAUTHORISED);
+        }
+        
+        return userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
     }
 }
