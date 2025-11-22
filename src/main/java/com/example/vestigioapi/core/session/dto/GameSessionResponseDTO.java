@@ -5,18 +5,16 @@ import java.util.List;
 import java.util.Set;
 
 import com.example.vestigioapi.core.session.model.GameStatus;
-import com.example.vestigioapi.vestigio.dto.MoveDTO;
-import com.example.vestigioapi.vestigio.dto.StoryResponseDTO;
 
-public record GameSessionResponseDTO(
+public record GameSessionResponseDTO<T, M>(
     Long id,
     String roomCode,
     GameStatus status,
-    StoryResponseDTO story,
+    T content,
     PlayerDTO master,
     Set<PlayerDTO> players,
-    List<MoveDTO> moves,
-    List<StoryResponseDTO> storyOptions,
+    List<M> moves,
+    List<T> contentOptions,
     PlayerDTO winner,
     LocalDateTime createdAt
 ) {}

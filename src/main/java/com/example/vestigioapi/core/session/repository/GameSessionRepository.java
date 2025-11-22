@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.example.vestigioapi.core.session.model.GameSession;
+import com.example.vestigioapi.core.engine.GameSession;
 
 public interface GameSessionRepository extends JpaRepository<GameSession, Long> {
      Optional<GameSession> findByRoomCode(String roomCode);

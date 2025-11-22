@@ -49,4 +49,6 @@ public class ErrorMessages {
     public static final String ONLY_MASTER_CAN_SELECT_STORY = "Apenas o mestre pode selecionar a história.";
     public static final String DETECTIVE_NOT_FOUND = "Detetive não encontrado";
     public static final String WINNER_NOT_FOUND = "Campeão não encontrado";
+
+    public static final String ENGINE_NOT_FOUND = "Engine não configurada para este tipo de sessão.";
 }
