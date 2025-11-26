@@ -1,7 +1,8 @@
-package com.example.vestigioapi.application.model;
+package com.example.vestigioapi.application.model.session;
 
 import java.util.List;
 
+import com.example.vestigioapi.application.model.story.Story;
 import com.example.vestigioapi.framework.engine.GameSession;
 
 import jakarta.persistence.Entity;

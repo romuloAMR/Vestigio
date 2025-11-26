@@ -1,8 +1,8 @@
 package com.example.vestigioapi.application.service;
 
-import com.example.vestigioapi.application.model.Difficulty;
-import com.example.vestigioapi.application.model.Genre;
-import com.example.vestigioapi.framework.common.util.StoryPromptTemplates;
+import com.example.vestigioapi.application.model.story.Difficulty;
+import com.example.vestigioapi.application.util.StoryPromptTemplates;
+import com.example.vestigioapi.application.model.story.Genre;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

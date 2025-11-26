@@ -1,7 +1,7 @@
 package com.example.vestigioapi.application.dto;
 
-import com.example.vestigioapi.application.model.Difficulty;
-import com.example.vestigioapi.application.model.Genre;
+import com.example.vestigioapi.application.model.story.Difficulty;
+import com.example.vestigioapi.application.model.story.Genre;
 import com.example.vestigioapi.framework.common.util.ValidationMessages;
 
 import jakarta.validation.constraints.NotBlank;

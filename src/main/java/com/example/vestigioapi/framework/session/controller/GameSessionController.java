@@ -1,9 +1,5 @@
 package com.example.vestigioapi.framework.session.controller;
 
-import com.example.vestigioapi.application.dto.AnswerRequestDTO;
-import com.example.vestigioapi.application.dto.GameSessionCreateDTO;
-import com.example.vestigioapi.application.dto.MoveResponseDTO;
-import com.example.vestigioapi.application.dto.QuestionRequestDTO;
 import com.example.vestigioapi.framework.session.dto.GameSessionResponseDTO;
 import com.example.vestigioapi.framework.session.service.GameSessionService;
 import com.example.vestigioapi.framework.session.service.MoveService;

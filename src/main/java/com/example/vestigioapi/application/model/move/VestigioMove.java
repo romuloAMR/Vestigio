@@ -1,4 +1,4 @@
-package com.example.vestigioapi.application.model;
+package com.example.vestigioapi.application.model.move;
 
 import com.example.vestigioapi.framework.engine.Move;
 

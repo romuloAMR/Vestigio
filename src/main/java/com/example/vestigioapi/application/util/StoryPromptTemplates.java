@@ -1,4 +1,4 @@
-package com.example.vestigioapi.framework.common.util;
+package com.example.vestigioapi.application.util;
 
 public class StoryPromptTemplates {
     public static final String ENIGMATIC_SITUATION_PROMPT = """

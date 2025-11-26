@@ -12,17 +12,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.vestigioapi.application.dto.AnswerQuestionRequestDTO;
-import com.example.vestigioapi.application.dto.AskQuestionRequestDTO;
-import com.example.vestigioapi.application.dto.GameSessionCreateDTO;
-import com.example.vestigioapi.application.dto.MoveDTO;
-import com.example.vestigioapi.application.dto.StoryResponseDTO;
-import com.example.vestigioapi.application.model.Story;
-import com.example.vestigioapi.application.repository.StoryRepository;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
 import com.example.vestigioapi.framework.common.util.ErrorMessages;
+import com.example.vestigioapi.framework.engine.GameEngine;
 import com.example.vestigioapi.framework.engine.GameSession;
 import com.example.vestigioapi.framework.engine.Move;
 import com.example.vestigioapi.framework.session.dto.GameEvent;
@@ -39,9 +33,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GameSessionService {
     private final GameSessionRepository gameSessionRepository;
-    private final StoryRepository storyRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final Map<String, GameEngine<?>> engineRegistry;
 
 
     @Transactional
@@ -70,19 +64,21 @@ public class GameSessionService {
         return toResponseDTO(saved);
     }
 
-    public GameSessionResponseDTO createGameSession(GameSessionCreateDTO dto, User master) {
-        Story story = storyRepository.findById(dto.storyId())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + dto.storyId()));
+    public GameSessionResponseDTO createGameSession(String gameType, Map<String, Object> params, User master) {
 
-        User managedMaster = userRepository.findById(master.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MASTER_NOT_FOUND + " com id: " + master.getId()));
+        GameEngine engine = engineRegistry.get(gameType);
+        if (engine == null){
+            throw new BusinessRuleException("Tipo de jogo inválido");
+        }
 
-        GameSession session = new GameSession();
-        session.setMaster(managedMaster);
-        session.setStory(story);
-        session.setStatus(GameStatus.WAITING_FOR_PLAYERS);
+        GameSession session = engine.createSession();
+        
+        session.setMaster(master);
         session.setRoomCode(generateUniqueRoomCode());
-        session.getPlayers().add(managedMaster);
+        session.setStatus(GameStatus.WAITING_FOR_PLAYERS);
+        session.getPlayers().add(master);
+
+        engine.initializeGame(session, params);
 
         GameSession savedSession = gameSessionRepository.save(session);
         return toResponseDTO(savedSession);

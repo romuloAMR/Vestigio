@@ -4,9 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import com.example.vestigioapi.framework.engine.GameContent;
 import com.example.vestigioapi.framework.session.model.GameStatus;
 
-public record GameSessionResponseDTO<T, M>(
+public record GameSessionResponseDTO<T extends GameContent, M>(
     Long id,
     String roomCode,
     GameStatus status,

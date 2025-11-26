@@ -1,4 +1,4 @@
-package com.example.vestigioapi.application.model;
+package com.example.vestigioapi.application.model.story;
 
 import com.example.vestigioapi.framework.common.model.Auditable;
 import com.example.vestigioapi.framework.user.model.User;
@@ -15,13 +15,17 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Data
 @EqualsAndHashCode(callSuper=false)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "stories")
 public class Story extends Auditable {
@@ -51,4 +55,3 @@ public class Story extends Auditable {
     @JoinColumn(name = "creator_id")
     private User creator;
 }
-
