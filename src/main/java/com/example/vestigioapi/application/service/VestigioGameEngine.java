@@ -82,7 +82,12 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
             throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ASK_QUESTION);
         }
         
-        AskQuestionRequestDTO dto = objectMapper.convertValue(payload, AskQuestionRequestDTO.class);
+        AskQuestionRequestDTO dto;
+        try {
+            dto = objectMapper.convertValue(payload, AskQuestionRequestDTO.class);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessRuleException("Formato da jogada inválido.");
+        }
 
         VestigioMove move = new VestigioMove();
         move.setQuestion(dto.questionText());
@@ -97,7 +102,12 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
             throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ONLY_ANSWER);
         }
 
-        AnswerQuestionRequestDTO dto = objectMapper.convertValue(payload, AnswerQuestionRequestDTO.class);
+        AnswerQuestionRequestDTO dto;
+        try {
+            dto = objectMapper.convertValue(payload, AnswerQuestionRequestDTO.class);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessRuleException("Formato da resposta inválido.");
+        }
 
         VestigioMove targetMove = (VestigioMove) session.getMoves().stream()
             .filter(m -> m.getId().equals(dto.moveId()))
