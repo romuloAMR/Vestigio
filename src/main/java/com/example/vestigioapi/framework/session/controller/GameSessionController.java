@@ -23,6 +23,7 @@ import com.example.vestigioapi.framework.user.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@SuppressWarnings({"rawtypes"})
 @RestController
 @RequestMapping("/api/v1/player/game-sessions")
 @RequiredArgsConstructor

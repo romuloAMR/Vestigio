@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface GameEngine<S extends GameSession, C extends GameContent, M extends GameMoveDTO> {
+
+    S createSession();
+    
     boolean supports(GameSession session);
 
     void onGameStart(S session, Map<String, Object> configParams);

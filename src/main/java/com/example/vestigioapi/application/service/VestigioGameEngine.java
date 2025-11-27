@@ -1,33 +1,42 @@
 package com.example.vestigioapi.application.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.example.vestigioapi.application.dto.AnswerQuestionRequestDTO;
+import com.example.vestigioapi.application.dto.AskQuestionRequestDTO;
 import com.example.vestigioapi.application.dto.MoveResponseDTO;
 import com.example.vestigioapi.application.dto.StoryResponseDTO;
-import com.example.vestigioapi.application.model.move.AnswerType;
+import com.example.vestigioapi.application.model.move.VestigioMove;
 import com.example.vestigioapi.application.model.session.VestigioGameSession;
 import com.example.vestigioapi.application.model.story.Story;
-import com.example.vestigioapi.application.model.move.VestigioMove;
 import com.example.vestigioapi.application.repository.StoryRepository;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
+import com.example.vestigioapi.framework.common.util.ErrorMessages;
 import com.example.vestigioapi.framework.engine.GameEngine;
 import com.example.vestigioapi.framework.engine.GameSession;
 import com.example.vestigioapi.framework.engine.Move;
+import com.example.vestigioapi.framework.session.dto.PlayerDTO;
 import com.example.vestigioapi.framework.user.model.User;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+@Service("VESTIGIO") 
 @RequiredArgsConstructor
 public class VestigioGameEngine implements GameEngine<VestigioGameSession, StoryResponseDTO, MoveResponseDTO> {
 
     private final StoryRepository storyRepository;
+    private final ObjectMapper objectMapper;
 
     public static final String ACTION_ASK = "ASK_QUESTION";
     public static final String ACTION_ANSWER = "ANSWER_QUESTION";
@@ -38,8 +47,12 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
     }
 
     @Override
+    public VestigioGameSession createSession() {
+        return new VestigioGameSession();
+    }
+
+    @Override
     public void onGameStart(VestigioGameSession session, Map<String, Object> configParams) {
-        // O Framework passa um Map genérico. A Engine sabe que precisa de um "storyId".
         if (!configParams.containsKey("storyId")) {
             throw new BusinessRuleException("Para iniciar Vestígio, é obrigatório informar o 'storyId'.");
         }
@@ -50,7 +63,6 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
             .orElseThrow(() -> new ResourceNotFoundException("História não encontrada com ID: " + storyId));
 
         session.setCurrentStory(story);
-        // Aqui você poderia setar outras coisas específicas do Vestígio, como tempo limite, dicas iniciais, etc.
     }
 
     @Override
@@ -66,78 +78,96 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
     }
 
     private Move handleAskQuestion(VestigioGameSession session, User actor, Map<String, Object> payload) {
-        // 1. Validações de Regra de Negócio Específicas do Jogo
         if (session.getMaster().getId().equals(actor.getId())) {
-            throw new ForbiddenActionException("O Mestre não pode fazer perguntas.");
+            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ASK_QUESTION);
         }
         
-        if (!payload.containsKey("question")) {
-            throw new BusinessRuleException("Payload deve conter o campo 'question'.");
-        }
+        AskQuestionRequestDTO dto = objectMapper.convertValue(payload, AskQuestionRequestDTO.class);
 
-        String questionText = (String) payload.get("question");
-
-        // 2. Criação do Movimento Específico
         VestigioMove move = new VestigioMove();
-        move.setQuestion(questionText);
+        move.setQuestion(dto.questionText());
         move.setAuthor(actor);
         move.setCreatedAt(LocalDateTime.now());
-        // O framework vai associar a sessão e salvar no banco depois
         
         return move;
     }
 
     private Move handleAnswerQuestion(VestigioGameSession session, User actor, Map<String, Object> payload) {
-        // 1. Validações
         if (!session.getMaster().getId().equals(actor.getId())) {
-            throw new ForbiddenActionException("Apenas o Mestre pode responder.");
+            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ONLY_ANSWER);
         }
 
-        if (!payload.containsKey("moveId") || !payload.containsKey("answer")) {
-            throw new BusinessRuleException("Payload deve conter 'moveId' e 'answer'.");
-        }
+        AnswerQuestionRequestDTO dto = objectMapper.convertValue(payload, AnswerQuestionRequestDTO.class);
 
-        Long moveId = Long.valueOf(payload.get("moveId").toString());
-        String answerString = (String) payload.get("answer");
-        AnswerType answerType = AnswerType.valueOf(answerString); // Assume que o enum bate com a string
-
-        // 2. Busca o movimento existente na lista da sessão
         VestigioMove targetMove = (VestigioMove) session.getMoves().stream()
-            .filter(m -> m.getId().equals(moveId))
+            .filter(m -> m.getId().equals(dto.moveId()))
             .findFirst()
-            .orElseThrow(() -> new ResourceNotFoundException("Pergunta não encontrada nesta sessão."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MOVE_NOT_FOUND));
 
         if (targetMove.getAnswer() != null) {
-            throw new BusinessRuleException("Esta pergunta já foi respondida.");
+            throw new BusinessRuleException(ErrorMessages.MOVE_ALREADY_ANSWERED);
         }
 
-        // 3. Atualiza o movimento
-        targetMove.setAnswer(answerType);
+        targetMove.setAnswer(dto.answer());
         
-        // Retornamos o movimento modificado para o framework salvar/notificar
         return targetMove;
     }
 
     @Override
     public boolean checkWinCondition(VestigioGameSession session) {
-        // TODO Lógica futura: O mestre pode ter um botão "Mistério Resolvido" que aciona um flag na sessão
-        return false;
+        return session.getWinner() != null;
     }
 
     @Override
     public void onGameEnd(VestigioGameSession session) {
-        // TODO Lógica de limpeza ou pontuação final
+        //TODO: fazer
     }
 
     @Override
-    public void onGameStart(VestigioGameSession session) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'onGameStart'");
+    public StoryResponseDTO getGameContent(VestigioGameSession session) {
+        if (session.getCurrentStory() == null) return null;
+        return toStoryDTO(session.getCurrentStory());
     }
 
     @Override
-    public Move processMove(VestigioGameSession session, User player, String question) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'processMove'");
+    public List<StoryResponseDTO> getContentOptions(VestigioGameSession session) {
+        if (session.getStoryOptions() == null) return Collections.emptyList();
+        
+        return session.getStoryOptions().stream()
+            .map(this::toStoryDTO)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MoveResponseDTO> getGameMoves(VestigioGameSession session) {
+        if (session.getMoves() == null) return Collections.emptyList();
+
+        return session.getMoves().stream()
+            .map(m -> (VestigioMove) m)
+            .sorted(Comparator.comparing(VestigioMove::getCreatedAt))
+            .map(this::toMoveDTO)
+            .collect(Collectors.toList());
+    }
+
+    private StoryResponseDTO toStoryDTO(Story story) {
+        return new StoryResponseDTO(
+            story.getId(),
+            story.getTitle(),
+            story.getEnigmaticSituation(),
+            story.getFullSolution(),
+            story.getGenre(),
+            story.getDifficulty(),
+            story.getCreator() != null ? story.getCreator().getName() : "System"
+        );
+    }
+
+    private MoveResponseDTO toMoveDTO(VestigioMove move) {
+        return new MoveResponseDTO(
+            move.getId(),
+            move.getQuestion(),
+            move.getAnswer(),
+            new PlayerDTO(move.getAuthor().getId(), move.getAuthor().getUsername()),
+            move.getCreatedAt()
+        );
     }
 }

@@ -31,4 +31,8 @@ public abstract class Auditable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
 }
