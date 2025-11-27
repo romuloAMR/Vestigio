@@ -1,21 +1,24 @@
 package com.example.vestigioapi.framework.engine;
 
 import com.example.vestigioapi.framework.user.model.User;
+
+import java.util.List;
 import java.util.Map;
 
-public interface GameEngine<T extends GameSession> {
-    
+public interface GameEngine<S extends GameSession, C extends GameContent, M extends GameMoveDTO> {
     boolean supports(GameSession session);
 
-    void onGameStart(T session, Map<String, Object> configParams);
-    
-    Move processMove(T session, User player, String actionType, Map<String, Object> payload);
-    
-    boolean checkWinCondition(T session);
-    
-    void onGameEnd(T session);
+    void onGameStart(S session, Map<String, Object> configParams);
 
-    void onGameStart(VestigioGameSession session);
+    Move processMove(S session, User player, String actionType, Map<String, Object> payload);
 
-    Move processMove(VestigioGameSession session, User player, String question);
+    boolean checkWinCondition(S session);
+
+    void onGameEnd(S session);
+
+    C getGameContent(S session);
+
+    List<C> getContentOptions(S session);
+
+    List<M> getGameMoves(S session);
 }

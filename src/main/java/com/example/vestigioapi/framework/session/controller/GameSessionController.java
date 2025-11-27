@@ -1,9 +1,6 @@
 package com.example.vestigioapi.framework.session.controller;
 
-import com.example.vestigioapi.framework.session.dto.GameSessionResponseDTO;
-import com.example.vestigioapi.framework.session.service.GameSessionService;
-import com.example.vestigioapi.framework.session.service.MoveService;
-import com.example.vestigioapi.framework.user.model.User;
+import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -11,15 +8,20 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.RequiredArgsConstructor;
+import com.example.vestigioapi.framework.engine.GameOrchestratorService;
+import com.example.vestigioapi.framework.engine.Move;
+import com.example.vestigioapi.framework.session.dto.GameActionRequestDTO;
+import com.example.vestigioapi.framework.session.dto.GameSessionResponseDTO;
+import com.example.vestigioapi.framework.session.dto.GameStartRequestDTO;
+import com.example.vestigioapi.framework.session.service.GameSessionService;
+import com.example.vestigioapi.framework.user.model.User;
 
 import jakarta.validation.Valid;
-import java.net.URI;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/player/game-sessions")
@@ -27,15 +29,19 @@ import java.net.URI;
 public class GameSessionController {
 
     private final GameSessionService gameSessionService;
-    private final MoveService jogadaService;
+    private final GameOrchestratorService gameOrchestratorService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping
     public ResponseEntity<GameSessionResponseDTO> createGame(
-            @Valid @RequestBody GameSessionCreateDTO createDTO,
+            @Valid @RequestBody GameStartRequestDTO startDTO,
             @AuthenticationPrincipal User master) {
 
-        GameSessionResponseDTO response = gameSessionService.createGameSession(createDTO, master);
+        GameSessionResponseDTO response = gameSessionService.createGameSession(
+            startDTO.gameType(), 
+            startDTO.configParams(), 
+            master
+        );
 
         messagingTemplate.convertAndSend("/topic/game/" + response.roomCode(), response);
 
@@ -53,59 +59,41 @@ public class GameSessionController {
 
         messagingTemplate.convertAndSend("/topic/game/" + response.roomCode(), response);
 
-        return ResponseEntity
-            .ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{roomCode}")
     public ResponseEntity<GameSessionResponseDTO> getGame(@PathVariable String roomCode) {
         GameSessionResponseDTO response = gameSessionService.getGameSessionByRoomCode(roomCode);
-        return ResponseEntity
-            .ok(response);
-    }
-
-    @PostMapping("/{roomCode}/start-selection")
-    public ResponseEntity<GameSessionResponseDTO> startStorySelection(
-            @PathVariable String roomCode,
-            @AuthenticationPrincipal User user) {
-        
-        GameSessionResponseDTO response = gameSessionService.startStorySelection(roomCode, user);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{roomCode}/start")
-    public ResponseEntity<GameSessionResponseDTO> startGameSession(@PathVariable String roomCode, @AuthenticationPrincipal User master) {
-        GameSessionResponseDTO startedGame = gameSessionService.startGameSession(roomCode, master.getId());
-        return ResponseEntity.ok(startedGame);
+    public ResponseEntity<Void> startGameSession(
+            @PathVariable String roomCode, 
+            @AuthenticationPrincipal User master) {
+        gameOrchestratorService.startGame(roomCode);
+        return ResponseEntity.ok().build();
     }
-    
+
+    @PostMapping("/{roomCode}/action")
+    public ResponseEntity<Move> processAction(
+            @PathVariable String roomCode,
+            @RequestBody GameActionRequestDTO actionRequest, 
+            @AuthenticationPrincipal User player) {
+
+        Move move = gameOrchestratorService.processPlayerMove(roomCode, player, actionRequest);
+
+        messagingTemplate.convertAndSend("/topic/game-sessions/" + roomCode + "/moves", move); 
+        return ResponseEntity.ok(move);
+    }
+
     @PostMapping("/{roomCode}/finish")
-    public ResponseEntity<GameSessionResponseDTO> finishGameSession(@PathVariable String roomCode, @AuthenticationPrincipal User master) {
+    public ResponseEntity<GameSessionResponseDTO> finishGameSession(
+            @PathVariable String roomCode, 
+            @AuthenticationPrincipal User master) {
+        
         GameSessionResponseDTO finishedGame = gameSessionService.finishGameSession(roomCode, master.getId());
         return ResponseEntity.ok(finishedGame);
     }
-
-    @PostMapping("/{roomCode}/ask-question")
-    public ResponseEntity<MoveResponseDTO> askQuestion(
-            @PathVariable String roomCode,
-            @RequestBody QuestionRequestDTO request, 
-            @AuthenticationPrincipal User player) {
-        MoveResponseDTO move = jogadaService.processQuestion(roomCode, player.getId(), request.question());
-
-        messagingTemplate.convertAndSend("/topic/game-sessions/" + roomCode + "/moves", move);
-        return ResponseEntity.ok(move);
-    }
-    
-    @PutMapping("{roomCode}/moves/{moveId}/answer-question")
-    public ResponseEntity<MoveResponseDTO> answerQuestion(
-            @PathVariable String roomCode,
-            @PathVariable Long moveId,
-            @RequestBody AnswerRequestDTO request,
-            @AuthenticationPrincipal User master) {
-        MoveResponseDTO move = jogadaService.processAnswer(moveId, master.getId(), request.answer());
-        
-        messagingTemplate.convertAndSend("/topic/game-sessions/" + roomCode + "/moves", move);
-        return ResponseEntity.ok(move);
-    }
-
 }

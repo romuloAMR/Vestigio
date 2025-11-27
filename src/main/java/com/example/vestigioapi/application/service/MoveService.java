@@ -1,7 +1,8 @@
-package com.example.vestigioapi.framework.session.service;
+package com.example.vestigioapi.application.service;
 
 import org.springframework.stereotype.Service;
 
+import com.example.vestigioapi.application.dto.MoveResponseDTO;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
