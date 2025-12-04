@@ -1,5 +1,6 @@
 package com.example.vestigioapi.application.model.move;
 
+import com.example.vestigioapi.framework.common.util.ErrorMessages;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -19,7 +20,7 @@ public enum AnswerType {
             case "YES", "SIM" -> YES;
             case "NO", "NAO", "NÃO" -> NO;
             case "INDIFFERENT", "INDIFERENTE", "NEUTRAL", "NEUTRO" -> INDIFFERENT;
-            default -> throw new BusinessRuleException("Unknown AnswerType: " + value);
+            default -> throw new BusinessRuleException(ErrorMessages.UNKNOWN_ANSWER_TYPE, value);
         };
     }
 

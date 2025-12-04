@@ -19,6 +19,7 @@ import com.example.vestigioapi.application.model.move.VestigioMove;
 import com.example.vestigioapi.application.model.session.VestigioGameSession;
 import com.example.vestigioapi.application.model.story.Story;
 import com.example.vestigioapi.application.repository.StoryRepository;
+import com.example.vestigioapi.application.util.VestigioErrorMessages;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
@@ -54,7 +55,7 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
     @Override
     public void onGameStart(VestigioGameSession session, Map<String, Object> configParams) {
         if (!configParams.containsKey("storyId")) {
-            throw new BusinessRuleException("Para iniciar Vestígio, é obrigatório informar o 'storyId'.");
+            throw new BusinessRuleException(VestigioErrorMessages.VESTIGIO_STORY_ID_REQUIRED);
         }
 
         Long storyId = Long.valueOf(configParams.get("storyId").toString());
@@ -79,7 +80,7 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
 
     private Move handleAskQuestion(VestigioGameSession session, User actor, Map<String, Object> payload) {
         if (session.getMaster().getId().equals(actor.getId())) {
-            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ASK_QUESTION);
+            throw new ForbiddenActionException(VestigioErrorMessages.FORBIDDEN_MASTER_ASK_QUESTION);
         }
         
         AskQuestionRequestDTO dto;
@@ -99,7 +100,7 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
 
     private Move handleAnswerQuestion(VestigioGameSession session, User actor, Map<String, Object> payload) {
         if (!session.getMaster().getId().equals(actor.getId())) {
-            throw new ForbiddenActionException(ErrorMessages.FORBIDDEN_MASTER_ONLY_ANSWER);
+            throw new ForbiddenActionException(VestigioErrorMessages.FORBIDDEN_MASTER_ONLY_ANSWER);
         }
 
         AnswerQuestionRequestDTO dto;
@@ -115,7 +116,7 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
             .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MOVE_NOT_FOUND));
 
         if (targetMove.getAnswer() != null) {
-            throw new BusinessRuleException(ErrorMessages.MOVE_ALREADY_ANSWERED);
+            throw new BusinessRuleException(VestigioErrorMessages.MOVE_ALREADY_ANSWERED);
         }
 
         targetMove.setAnswer(dto.answer());
@@ -134,9 +135,21 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
     }
 
     @Override
-    public StoryResponseDTO getGameContent(VestigioGameSession session) {
+    public StoryResponseDTO getGameContent(VestigioGameSession session, Long viewerId) {
         if (session.getCurrentStory() == null) return null;
-        return toStoryDTO(session.getCurrentStory());
+        
+        boolean isMaster = session.getMaster().getId().equals(viewerId);
+        Story story = session.getCurrentStory();
+
+        return new StoryResponseDTO(
+            story.getId(),
+            story.getTitle(),
+            story.getEnigmaticSituation(),
+            isMaster ? story.getFullSolution() : null,
+            story.getGenre(),
+            story.getDifficulty(),
+            story.getCreator() != null ? story.getCreator().getName() : "System"
+        );
     }
 
     @Override

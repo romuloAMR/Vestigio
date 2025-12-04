@@ -38,7 +38,7 @@ public class GameSessionService {
         GameEngine engine = engineRegistry.get(gameType);
         
         if (engine == null){
-            throw new BusinessRuleException("Tipo de jogo inválido ou Engine não registrada: " + gameType);
+            throw new BusinessRuleException(ErrorMessages.INVALID_GAME_TYPE_OR_ENGINE, gameType);
         }
 
         GameSession session = (GameSession) engine.createSession();
@@ -51,7 +51,7 @@ public class GameSessionService {
         callEngineOnGameStart(engine, session, params);
 
         GameSession savedSession = gameSessionRepository.save(session);
-        return toResponseDTO(savedSession);
+        return toResponseDTO(savedSession, master.getId());
     }
 
     @Transactional
@@ -70,13 +70,13 @@ public class GameSessionService {
         }
         
         GameSession updatedSession = gameSessionRepository.save(session);
-        return toResponseDTO(updatedSession);
+        return toResponseDTO(updatedSession, player.getId());
     }
 
     @Transactional(readOnly = true)
-    public GameSessionResponseDTO<?, ?> getGameSessionByRoomCode(String roomCode) {
+    public GameSessionResponseDTO<?, ?> getGameSessionByRoomCode(String roomCode, Long requesterId) {
         GameSession session = findSessionByRoomCodeOrThrow(roomCode);
-        return toResponseDTO(session);
+        return toResponseDTO(session, requesterId);
     }
 
     @Transactional
@@ -92,21 +92,21 @@ public class GameSessionService {
         resolveEngine(session).onGameEnd(session);
 
         GameSession saved = gameSessionRepository.save(session);
-        return toResponseDTO(saved);
+        return toResponseDTO(saved, requesterId);
     }
 
     private GameSession findSessionByRoomCodeOrThrow(String roomCode) {
         return gameSessionRepository.findByRoomCode(roomCode)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND + ": " + roomCode));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND, roomCode));
     }
 
     private String generateUniqueRoomCode() {
         return RandomStringUtils.randomAlphanumeric(6).toUpperCase();
     }
 
-    private GameSessionResponseDTO<?, ?> toResponseDTO(GameSession session) {
+    private GameSessionResponseDTO<?, ?> toResponseDTO(GameSession session, Long viewerId) {
         GameEngine engine = resolveEngine(session);
-        GameContent content = (GameContent) engine.getGameContent(session); 
+        GameContent content = (GameContent) engine.getGameContent(session, viewerId); 
         List<GameContent> options = engine.getContentOptions(session);
         List<? extends GameMoveDTO> moves = engine.getGameMoves(session);
 

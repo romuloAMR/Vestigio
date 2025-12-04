@@ -1,9 +1,18 @@
 package com.example.vestigioapi.framework.common.handler;
 
+import com.example.vestigioapi.framework.common.dto.ErrorResponseDTO;
+import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
+import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
+import com.example.vestigioapi.framework.common.exception.GameFrameworkException;
+import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
+import com.example.vestigioapi.framework.common.util.ErrorMessages;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,33 +22,43 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.example.vestigioapi.framework.common.dto.ErrorResponseDTO;
-import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
-import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
-import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
-import com.example.vestigioapi.framework.common.util.ErrorMessages;
-
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final MessageSource messageSource;
+
+    private String getMessage(String key, Object... args) {
+        try {
+            return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+        } catch (Exception e) {
+            return key; // Fallback to key if not found
+        }
+    }
+
+    private String getMessage(GameFrameworkException ex) {
+        return getMessage(ex.getMessageKey(), ex.getArgs());
+    }
 
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ErrorResponseDTO> handleBusinessRule(
         BusinessRuleException exception, HttpServletRequest request
     ) {
-        
-        log.warn("Business Rule violated: {} - URI: {}", exception.getMessage(), request.getRequestURI());
+        String message = getMessage(exception);
+        log.warn("Business Rule violated: {} - URI: {}", message, request.getRequestURI());
 
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.BAD_REQUEST.value(),
             HttpStatus.BAD_REQUEST.getReasonPhrase(),
-            exception.getMessage(),
+            message,
             request.getRequestURI()
         );
         
@@ -52,12 +71,13 @@ public class GlobalExceptionHandler {
     ) {
 
         log.info("JWT Expired for URI: {}", request.getRequestURI());
+        String message = getMessage(ErrorMessages.TOKEN_EXPIRED);
 
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.UNAUTHORIZED.value(),
             HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-            ErrorMessages.TOKEN_EXPIRED,
+            message,
             request.getRequestURI()
         );
 
@@ -70,12 +90,13 @@ public class GlobalExceptionHandler {
     ) {
 
         log.info("Invalid JWT signature/format for URI: {}", request.getRequestURI());
+        String message = getMessage(ErrorMessages.INVALID_TOKEN);
 
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.UNAUTHORIZED.value(),
             HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-            ErrorMessages.INVALID_TOKEN,
+            message,
             request.getRequestURI()
         );
 
@@ -104,14 +125,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> handleForbiddenAction(
         ForbiddenActionException exception, HttpServletRequest request
     ) {
-        
-        log.warn("Forbidden action: {} - URI: {}", exception.getMessage(), request.getRequestURI());
+        String message = getMessage(exception);
+        log.warn("Forbidden action: {} - URI: {}", message, request.getRequestURI());
 
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.FORBIDDEN.value(),
             HttpStatus.FORBIDDEN.getReasonPhrase(),
-            exception.getMessage(),
+            message,
             request.getRequestURI()
         );
         
@@ -122,14 +143,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> handleResourceNotFound(
         ResourceNotFoundException exception, HttpServletRequest request
     ) {
-
-        log.warn("Resource Not Found: {} - URI: {}", exception.getMessage(), request.getRequestURI());
+        String message = getMessage(exception);
+        log.warn("Resource Not Found: {} - URI: {}", message, request.getRequestURI());
         
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.NOT_FOUND.value(),
             HttpStatus.NOT_FOUND.getReasonPhrase(),
-            exception.getMessage(),
+            message,
             request.getRequestURI()
         );
         
@@ -142,12 +163,13 @@ public class GlobalExceptionHandler {
     ) {
 
         log.warn("Data Integrity Violation: {} - URI: {}", exception.getMessage(), request.getRequestURI());
+        String message = getMessage(ErrorMessages.DATA_CONFLICT);
 
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.CONFLICT.value(),
             HttpStatus.CONFLICT.getReasonPhrase(),
-            ErrorMessages.DATA_CONFLICT,
+            message,
             request.getRequestURI()
         );
 
@@ -165,15 +187,16 @@ public class GlobalExceptionHandler {
             .map(FieldError::getDefaultMessage)
             .findFirst()
             .orElse(ErrorMessages.INVALID_INPUT);
-
         
-        log.warn("Validation failed (422) on URI: {} - Error: {}", request.getRequestURI(), errorMessage);
+        String resolvedMessage = getMessage(errorMessage);
+
+        log.warn("Validation failed (422) on URI: {} - Error: {}", request.getRequestURI(), resolvedMessage);
         
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.UNPROCESSABLE_ENTITY.value(),
             HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase(),
-            errorMessage,
+            resolvedMessage,
             request.getRequestURI()
         );
         
@@ -186,12 +209,13 @@ public class GlobalExceptionHandler {
     ) {
         
         log.error("An unexpected error occurred in URI: {}", request.getRequestURI(), exception);
+        String message = getMessage(ErrorMessages.INTERNAL_SEVER_ERROR);
         
         ErrorResponseDTO errorDetails = new ErrorResponseDTO(
             LocalDateTime.now(),
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-            ErrorMessages.INTERNAL_SEVER_ERROR,
+            message,
             request.getRequestURI()
         );
         

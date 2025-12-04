@@ -64,8 +64,10 @@ public class GameSessionController {
     }
 
     @GetMapping("/{roomCode}")
-    public ResponseEntity<GameSessionResponseDTO> getGame(@PathVariable String roomCode) {
-        GameSessionResponseDTO response = gameSessionService.getGameSessionByRoomCode(roomCode);
+    public ResponseEntity<GameSessionResponseDTO> getGame(
+            @PathVariable String roomCode,
+            @AuthenticationPrincipal User player) {
+        GameSessionResponseDTO response = gameSessionService.getGameSessionByRoomCode(roomCode, player.getId());
         return ResponseEntity.ok(response);
     }
 

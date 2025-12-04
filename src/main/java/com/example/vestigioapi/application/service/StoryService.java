@@ -13,10 +13,10 @@ import com.example.vestigioapi.application.model.story.Genre;
 import com.example.vestigioapi.application.model.story.Story;
 import com.example.vestigioapi.application.model.story.StoryStatus;
 import com.example.vestigioapi.application.repository.StoryRepository;
+import com.example.vestigioapi.application.util.VestigioErrorMessages;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
-import com.example.vestigioapi.framework.common.util.ErrorMessages;
 import com.example.vestigioapi.framework.user.model.User;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class StoryService {
         System.out.println("Danger: " + isDangerous);
 
         if (isDangerous){
-            throw new BusinessRuleException(ErrorMessages.STORY_REJECTED);
+            throw new BusinessRuleException(VestigioErrorMessages.STORY_REJECTED);
         }
 
         Story story = new Story();
@@ -73,7 +73,7 @@ public class StoryService {
 
     public StoryResponseDTO getStoryById(Long id) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException(VestigioErrorMessages.STORY_NOT_FOUND + " com id: " + id));
         return toResponseDTO(story);
     }
 
@@ -122,7 +122,7 @@ public class StoryService {
 
     public StoryResponseDTO updateStory(Long id, StoryCreateDTO dto, User creator) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException(VestigioErrorMessages.STORY_NOT_FOUND + " com id: " + id));
 
         validateStoryOwnership(story, creator);
         
@@ -137,7 +137,7 @@ public class StoryService {
 
     public void deleteStory(Long id, User creator) {
         Story story = storyRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.STORY_NOT_FOUND + " com id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException(VestigioErrorMessages.STORY_NOT_FOUND + " com id: " + id));
         
         validateStoryOwnership(story, creator);
 
@@ -146,7 +146,7 @@ public class StoryService {
 
     private void validateStoryOwnership(Story story, User creator) {
         if (story.getCreator() == null || !story.getCreator().getId().equals(creator.getId())) {
-            throw new ForbiddenActionException(ErrorMessages.UNAUTHORIZED_ACTION_IN_STORY);
+            throw new ForbiddenActionException(VestigioErrorMessages.UNAUTHORIZED_ACTION_IN_STORY);
         }
     }
 

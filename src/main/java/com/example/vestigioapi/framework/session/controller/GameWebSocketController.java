@@ -37,6 +37,7 @@ public class GameWebSocketController {
 
     @SubscribeMapping("/game/{roomCode}")
     public GameSessionResponseDTO onSubscribe(@DestinationVariable String roomCode, Principal principal) {
-        return gameSessionService.getGameSessionByRoomCode(roomCode);
+        User user = userService.getAuthenticatedUser(principal);
+        return gameSessionService.getGameSessionByRoomCode(roomCode, user.getId());
     }
 }
