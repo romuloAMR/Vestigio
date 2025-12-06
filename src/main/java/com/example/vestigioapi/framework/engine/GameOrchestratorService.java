@@ -28,10 +28,21 @@ public class GameOrchestratorService {
     private final MoveRepository moveRepository;
     private final List<GameEngine> availableEngines;     
     private final SimpMessagingTemplate messagingTemplate;
+    private final List<GameRule> gameRules;
 
     @Transactional
     public Move processPlayerMove(String roomCode, User player, GameActionRequestDTO actionRequest) {
         GameSession session = findSession(roomCode);
+
+        gameRules.stream()
+            .filter(rule -> rule.supports(session))
+            .forEach(rule -> rule.validate(
+                session, 
+                player, 
+                actionRequest.actionType(), 
+                actionRequest.payload()
+            ));
+
         GameEngine engine = resolveEngine(session);
         
         Move move = engine.processMove(
