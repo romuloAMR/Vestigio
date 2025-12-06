@@ -29,6 +29,7 @@ public class GameOrchestratorService {
     private final List<GameEngine> availableEngines;     
     private final SimpMessagingTemplate messagingTemplate;
     private final List<GameRule> gameRules;
+    private final List<GameEventListener> gameEventListeners;
 
     @Transactional
     public Move processPlayerMove(String roomCode, User player, GameActionRequestDTO actionRequest) {
@@ -56,9 +57,17 @@ public class GameOrchestratorService {
 
         Move savedMove = moveRepository.save(move);
 
+        gameEventListeners.stream()
+            .filter(l -> l.supports(session))
+            .forEach(l -> l.onMoveMade(session, savedMove));
+
         if (engine.checkWinCondition(session)) {
             engine.onGameEnd(session);
             sessionRepository.save(session);
+
+            gameEventListeners.stream()
+            .filter(l -> l.supports(session))
+            .forEach(l -> l.onGameEnd(session, session.getWinner()));
         }
 
         notifyGameState(roomCode, savedMove);
@@ -74,6 +83,11 @@ public class GameOrchestratorService {
         engine.onGameStart(session, Collections.emptyMap());
         
         sessionRepository.save(session);
+
+        gameEventListeners.stream()
+            .filter(l -> l.supports(session))
+            .forEach(l -> l.onGameStart(session));
+
         notifyGameState(roomCode, session);
     }
 
