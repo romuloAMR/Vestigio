@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.example.vestigioapi.application.vestigio.ai.AIService;
 import com.example.vestigioapi.application.vestigio.story.constants.Difficulty;
 import com.example.vestigioapi.application.vestigio.story.constants.Genre;
 import com.example.vestigioapi.application.vestigio.story.constants.StoryStatus;
@@ -13,6 +12,7 @@ import com.example.vestigioapi.application.vestigio.story.dto.StoryAICreateDTO;
 import com.example.vestigioapi.application.vestigio.story.dto.StoryCreateDTO;
 import com.example.vestigioapi.application.vestigio.story.dto.StoryResponseDTO;
 import com.example.vestigioapi.application.vestigio.util.VestigioErrorMessages;
+import com.example.vestigioapi.framework.ai.game.VestigioAIService;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
@@ -25,17 +25,22 @@ import lombok.RequiredArgsConstructor;
 public class StoryService {
 
     private final StoryRepository storyRepository;
-    private final AIService aiService;
+    private final VestigioAIService vestigioAIService;
     
     public StoryResponseDTO createStory(StoryCreateDTO dto, User creator) {
 
-        Boolean isDangerous = aiService.storyEvaluation(dto.enigmaticSituation(), dto.fullSolution());
+        System.out.println("[StoryService] Starting content evaluation for story: " + dto.title());
+        
+        Boolean isDangerous = vestigioAIService.evaluateStoryContent(dto.enigmaticSituation(), dto.fullSolution());
 
-        System.out.println("Danger: " + isDangerous);
+        System.out.println("[StoryService] Content evaluation result - Is dangerous: " + isDangerous);
 
         if (isDangerous){
+            System.out.println("[StoryService] Story rejected due to inappropriate content");
             throw new BusinessRuleException(VestigioErrorMessages.STORY_REJECTED);
         }
+        
+        System.out.println("[StoryService] Story approved, proceeding with creation");
 
         Story story = new Story();
         story.setTitle(dto.title());
@@ -56,8 +61,8 @@ public class StoryService {
         String title = dto.title();
         Genre genre = dto.genre();
         Difficulty difficulty = dto.difficulty();
-        String enigmaticSituation = aiService.generateStoryEnigmaticSituation(title, genre, difficulty);
-        String fullSolution = aiService.generateStoryFullSolution(title, enigmaticSituation);
+        String enigmaticSituation = vestigioAIService.generateEnigmaticSituation(title, genre, difficulty);
+        String fullSolution = vestigioAIService.generateFullSolution(title, enigmaticSituation);
 
         StoryCreateDTO fullStoryDTO = new StoryCreateDTO(
             title,

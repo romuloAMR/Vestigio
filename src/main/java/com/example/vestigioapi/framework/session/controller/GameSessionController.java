@@ -38,6 +38,10 @@ public class GameSessionController {
             @Valid @RequestBody GameStartRequestDTO startDTO,
             @AuthenticationPrincipal User master) {
 
+        System.out.println("[GameSessionController] Received request:");
+        System.out.println("[GameSessionController] gameType: " + startDTO.gameType());
+        System.out.println("[GameSessionController] configParams: " + startDTO.configParams());
+
         GameSessionResponseDTO response = gameSessionService.createGameSession(
             startDTO.gameType(), 
             startDTO.configParams(), 

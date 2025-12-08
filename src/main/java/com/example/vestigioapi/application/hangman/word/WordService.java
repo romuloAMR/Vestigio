@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.vestigioapi.application.hangman.word.dto.WordCreateDTO;
 import com.example.vestigioapi.application.hangman.word.dto.WordResponseDTO;
-import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
+import com.example.vestigioapi.application.vestigio.story.constants.Difficulty;
+import com.example.vestigioapi.framework.ai.game.HangmanAIService;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
 import com.example.vestigioapi.framework.user.model.User;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class WordService {
 
     private final WordRepository wordRepository;
+    private final HangmanAIService hangmanAIService;
     
     public WordResponseDTO createWord(WordCreateDTO dto, User creator) {
 
@@ -51,35 +53,25 @@ public class WordService {
         Collections.shuffle(allWords);
 
         int desired = Math.max(0, count);
-        List<WordResponseDTO> result = new java.util.ArrayList<>();
+        int limit = Math.min(desired, allWords.size());
+        
+        return allWords.stream()
+            .limit(limit)
+            .map(this::toResponseDTO)
+            .toList();
+    }
 
-        int takeFromDb = Math.min(2, allWords.size());
-        for (int i = 0; i < takeFromDb && result.size() < desired; i++) {
-            result.add(toResponseDTO(allWords.get(i)));
+    public String generateAIWord(String category, String difficulty) {
+        try {
+            Difficulty diff = Difficulty.valueOf(difficulty.toUpperCase());
+            return hangmanAIService.generateWord(category, diff);
+        } catch (IllegalArgumentException e) {
+            return hangmanAIService.generateWord(category, Difficulty.EASY);
         }
+    }
 
-        if (desired > result.size()) {
-           Genre genre = Genre.COMEDY;
-            Difficulty difficulty = Difficulty.EASY;
-            if (!allWords.isEmpty()) {
-                Word reference = allWords.get(0);
-                if (reference.getType() != null) genre = reference.getGenre();
-                if (reference.getDifficulty() != null) difficulty = reference.getDifficulty();
-            }
-
-            String title = "História gerada - " + System.currentTimeMillis();
-            StoryAICreateDTO aiDto = new StoryAICreateDTO(title, genre, difficulty);
-            WordResponseDTO aiStory = createAIStory(aiDto, null);
-            result.add(aiStory);
-        }
-
-        int idx = takeFromDb;
-        while (result.size() < desired && idx < allWords.size()) {
-            result.add(toResponseDTO(allWords.get(idx)));
-            idx++;
-        }
-
-        return result;
+    public String getHintForWord(String word, int wrongGuesses) {
+        return hangmanAIService.generateHint(word, wrongGuesses);
     }
 
     public WordResponseDTO updateWord(Long id, WordCreateDTO dto, User creator) {

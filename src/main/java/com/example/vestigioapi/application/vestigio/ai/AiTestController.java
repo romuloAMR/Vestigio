@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.vestigioapi.application.vestigio.ai.dto.EvaluateStoryRequest;
 import com.example.vestigioapi.application.vestigio.ai.dto.GenerateSituationRequest;
 import com.example.vestigioapi.application.vestigio.ai.dto.GenerateSolutionRequest;
+import com.example.vestigioapi.framework.ai.game.VestigioAIService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,11 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class AiTestController {
 
-    private final AIService aiService;
+    private final VestigioAIService vestigioAIService;
 
     @PostMapping("/generate-situation")
     public ResponseEntity<String> generateSituation(@Valid @RequestBody GenerateSituationRequest request) {
-        String content = aiService.generateStoryEnigmaticSituation(
+        String content = vestigioAIService.generateEnigmaticSituation(
             request.title(),
             request.genre(),
             request.difficulty()
@@ -34,7 +35,7 @@ public class AiTestController {
 
     @PostMapping("/generate-solution")
     public ResponseEntity<String> generateSolution(@Valid @RequestBody GenerateSolutionRequest request) {
-        String content = aiService.generateStoryFullSolution(
+        String content = vestigioAIService.generateFullSolution(
             request.title(),
             request.enigmaticSituation()
         );
@@ -43,7 +44,7 @@ public class AiTestController {
 
     @PostMapping("/evaluate")
     public ResponseEntity<Boolean> evaluateStory(@Valid @RequestBody EvaluateStoryRequest request) {
-        Boolean isApproved = aiService.storyEvaluation(
+        Boolean isApproved = vestigioAIService.evaluateStoryContent(
             request.enigmaticSituation(),
             request.fullSolution()
         );
