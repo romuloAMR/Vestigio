@@ -36,6 +36,11 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
     private final StoryRepository storyRepository;
     private final ObjectMapper objectMapper;
 
+    @Override
+    public String getGameType() {
+        return "VESTIGIO";
+    }
+
     public static final String ACTION_ASK = "ASK_QUESTION";
     public static final String ACTION_ANSWER = "ANSWER_QUESTION";
 

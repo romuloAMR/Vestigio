@@ -26,6 +26,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TriviaGameEngine implements GameEngine<TriviaGameSession, QuestionResponseDTO, TriviaAnswerResponseDTO> {
 
+    @Override
+    public String getGameType() {
+        return "TRIVIA";
+    }
     private final QuestionRepository questionRepository;
     private final TriviaAIService triviaAIService;
 
