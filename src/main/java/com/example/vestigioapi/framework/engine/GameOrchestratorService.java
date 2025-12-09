@@ -3,6 +3,8 @@ package com.example.vestigioapi.framework.engine;
 import java.util.Collections;
 import java.util.List;
 
+import jakarta.persistence.EntityManager;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,8 +13,10 @@ import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
 import com.example.vestigioapi.framework.common.util.ErrorMessages;
 import com.example.vestigioapi.framework.session.dto.GameActionRequestDTO;
+import com.example.vestigioapi.framework.session.dto.GameSessionResponseDTO;
 import com.example.vestigioapi.framework.session.repository.GameSessionRepository;
 import com.example.vestigioapi.framework.session.repository.MoveRepository;
+import com.example.vestigioapi.framework.session.service.GameSessionService;
 import com.example.vestigioapi.framework.user.model.User;
 
 import lombok.RequiredArgsConstructor;
@@ -26,10 +30,12 @@ public class GameOrchestratorService {
 
     private final GameSessionRepository sessionRepository;
     private final MoveRepository moveRepository;
+    private final GameSessionService gameSessionService;
     private final List<GameEngine> availableEngines;     
     private final SimpMessagingTemplate messagingTemplate;
     private final List<GameRule> gameRules;
     private final List<GameEventListener> gameEventListeners;
+    private final EntityManager entityManager;
 
     @Transactional
     public Move processPlayerMove(String roomCode, User player, GameActionRequestDTO actionRequest) {
@@ -56,21 +62,32 @@ public class GameOrchestratorService {
         move.setAuthor(player);
 
         Move savedMove = moveRepository.save(move);
+        sessionRepository.save(session);
+        entityManager.flush();
+        entityManager.clear();
+        final GameSession refreshedSession = sessionRepository.findById(session.getId())
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.GAME_SESSION_NOT_FOUND));
 
         gameEventListeners.stream()
-            .filter(l -> l.supports(session))
-            .forEach(l -> l.onMoveMade(session, savedMove));
+            .filter(l -> l.supports(refreshedSession))
+            .forEach(l -> l.onMoveMade(refreshedSession, savedMove));
 
-        if (engine.checkWinCondition(session)) {
-            engine.onGameEnd(session);
-            sessionRepository.save(session);
+        if (engine.checkWinCondition(refreshedSession)) {
+            engine.onGameEnd(refreshedSession);
+            sessionRepository.save(refreshedSession);
 
             gameEventListeners.stream()
-            .filter(l -> l.supports(session))
-            .forEach(l -> l.onGameEnd(session, session.getWinner()));
+            .filter(l -> l.supports(refreshedSession))
+            .forEach(l -> l.onGameEnd(refreshedSession, refreshedSession.getWinner()));
         }
 
-        notifyGameState(roomCode, savedMove);
+        GameSessionResponseDTO<?, ?> responseDTO = gameSessionService
+            .toResponseDTO(refreshedSession, refreshedSession.getMaster().getId());
+        
+        System.out.println("[GameOrchestrator] Broadcasting update. Moves count: " + 
+            (responseDTO.moves() != null ? responseDTO.moves().size() : "null"));
+
+        notifyGameState(roomCode, responseDTO);
 
         return savedMove;
     }
@@ -82,13 +99,17 @@ public class GameOrchestratorService {
 
         engine.onGameStart(session, Collections.emptyMap());
         
-        sessionRepository.save(session);
+        session.setStatus(com.example.vestigioapi.framework.session.model.GameStatus.IN_PROGRESS);
+        
+        GameSession savedSession = sessionRepository.save(session);
 
         gameEventListeners.stream()
-            .filter(l -> l.supports(session))
-            .forEach(l -> l.onGameStart(session));
+            .filter(l -> l.supports(savedSession))
+            .forEach(l -> l.onGameStart(savedSession));
 
-        notifyGameState(roomCode, session);
+        GameSessionResponseDTO<?, ?> responseDTO = gameSessionService
+            .toResponseDTO(savedSession, savedSession.getMaster().getId());
+        notifyGameState(roomCode, responseDTO);
     }
 
     private GameSession findSession(String roomCode) {
