@@ -53,10 +53,17 @@ public class TriviaGameEngine implements GameEngine<TriviaGameSession, QuestionR
             ? Integer.parseInt(configParams.get("questionCount").toString())
             : 10;
 
+        String category = configParams.getOrDefault("category", "GERAL").toString();
+        String difficulty = configParams.getOrDefault("difficulty", "EASY").toString();
+
         List<Question> questions = questionRepository.findRandomQuestions(questionCount);
-        
-        if (questions.isEmpty()) {
-            throw new BusinessRuleException("Não há perguntas suficientes para iniciar a sessão");
+
+        if (questions.size() < questionCount) {
+            int toGenerate = questionCount - questions.size();
+            for (int i = 0; i < toGenerate; i++) {
+                Question aiQ = triviaAIService.generateQuestionEntity(category, difficulty);
+                questions.add(questionRepository.save(aiQ));
+            }
         }
 
         session.setTotalQuestions(questions.size());
@@ -107,7 +114,8 @@ public class TriviaGameEngine implements GameEngine<TriviaGameSession, QuestionR
 
     @Override
     public void onGameEnd(TriviaGameSession session) {
-        // Lógica de finalização do jogo
+        session.setCurrentQuestionIndex(session.getTotalQuestions());
+        session.setCurrentQuestionId(null);
     }
 
     @Override
