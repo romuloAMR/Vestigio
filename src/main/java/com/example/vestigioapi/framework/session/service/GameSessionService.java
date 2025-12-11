@@ -41,17 +41,20 @@ public class GameSessionService {
             throw new BusinessRuleException(ErrorMessages.INVALID_GAME_TYPE_OR_ENGINE, gameType);
         }
 
+        User managedMaster = userRepository.findById(master.getId())
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+
         GameSession session = (GameSession) engine.createSession();
 
-        session.setMaster(master);
+        session.setMaster(managedMaster);
         session.setRoomCode(generateUniqueRoomCode());
         session.setStatus(GameStatus.WAITING_FOR_PLAYERS);
-        session.getPlayers().add(master);
+        session.getPlayers().add(managedMaster);
 
         callEngineOnGameStart(engine, session, params);
 
         GameSession savedSession = gameSessionRepository.save(session);
-        return toResponseDTO(savedSession, master.getId());
+        return toResponseDTO(savedSession, managedMaster.getId());
     }
 
     @Transactional
@@ -104,7 +107,7 @@ public class GameSessionService {
         return RandomStringUtils.randomAlphanumeric(6).toUpperCase();
     }
 
-    private GameSessionResponseDTO<?, ?> toResponseDTO(GameSession session, Long viewerId) {
+    public GameSessionResponseDTO<?, ?> toResponseDTO(GameSession session, Long viewerId) {
         GameEngine engine = resolveEngine(session);
         GameContent content = (GameContent) engine.getGameContent(session, viewerId); 
         List<GameContent> options = engine.getContentOptions(session);
@@ -126,6 +129,7 @@ public class GameSessionService {
         return new GameSessionResponseDTO(
                 session.getId(),
                 session.getRoomCode(),
+                engine.getGameType(),
                 session.getStatus(),
                 content,       
                 masterDTO,

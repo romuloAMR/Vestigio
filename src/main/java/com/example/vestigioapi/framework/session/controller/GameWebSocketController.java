@@ -31,8 +31,13 @@ public class GameWebSocketController {
                              @Payload GameActionRequestDTO action, 
                              Principal principal) {
         
-        User user = userService.getAuthenticatedUser(principal);
-        gameOrchestratorService.processPlayerMove(roomCode, user, action);
+        try {
+            User user = userService.getAuthenticatedUser(principal);
+            gameOrchestratorService.processPlayerMove(roomCode, user, action);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e; 
+        }
     }
 
     @SubscribeMapping("/game/{roomCode}")

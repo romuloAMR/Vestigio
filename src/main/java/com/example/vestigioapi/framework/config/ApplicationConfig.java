@@ -1,7 +1,10 @@
 package com.example.vestigioapi.framework.config;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.example.vestigioapi.framework.engine.GameEngine;
 import com.example.vestigioapi.framework.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -53,6 +57,14 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public com.fasterxml.jackson.databind.ObjectMapper objectMapper() {
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return objectMapper;
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
@@ -68,5 +80,21 @@ public class ApplicationConfig {
         source.registerCorsConfiguration("/**", configuration);
         
         return source;
+    }
+
+    @Bean
+    public Map<String, GameEngine<?, ?, ?>> engineRegistry(List<GameEngine<?, ?, ?>> engines, ApplicationContext context) {
+        Map<String, GameEngine<?, ?, ?>> registry = new HashMap<>();
+        
+        for (GameEngine<?, ?, ?> engine : engines) {
+            String[] beanNames = context.getBeanNamesForType(engine.getClass());
+            if (beanNames.length > 0) {
+                String beanName = beanNames[0];
+                String gameType = beanName.toUpperCase();
+                registry.put(gameType, engine);
+            }
+        }
+        
+        return registry;
     }
 }

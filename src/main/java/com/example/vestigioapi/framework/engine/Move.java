@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity
-@Table(name = "moves")
+@Table(name = "game_moves")
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Move extends Auditable {
     
