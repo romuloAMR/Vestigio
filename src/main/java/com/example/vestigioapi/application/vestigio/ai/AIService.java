@@ -1,91 +1,65 @@
 package com.example.vestigioapi.application.vestigio.ai;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import com.example.vestigioapi.application.vestigio.story.constants.Difficulty;
 import com.example.vestigioapi.application.vestigio.story.constants.Genre;
+import com.example.vestigioapi.framework.ai.game.VestigioAIService;
+import com.example.vestigioapi.framework.ai.game.HangmanAIService;
+import com.example.vestigioapi.framework.ai.game.TriviaAIService;
 
+/**
+ * @deprecated Use framework.ai.game.* services instead
+ * 
+ * Este serviço foi mantido por compatibilidade com código antigo.
+ * Novas implementações devem usar diretamente:
+ * - VestigioAIService para Vestigio
+ * - HangmanAIService para Hangman
+ * - TriviaAIService para Trivia
+ */
 @Service
 @RequiredArgsConstructor
+@Deprecated(forRemoval = true, since = "2.0")
 public class AIService {
 
-    private final ChatClient.Builder chatClientBuilder;
-    private ChatClient chatClient;
+    private final VestigioAIService vestigioAIService;
+    private final HangmanAIService hangmanAIService;
+    private final TriviaAIService triviaAIService;
 
-    @PostConstruct
-    public void init() {
-        this.chatClient = chatClientBuilder.build();
-    }
-    
+    // VESTIGIO METHODS
     public String generateStoryEnigmaticSituation(String title, Genre genre, Difficulty difficulty) {
-
-        String userPromptContent = String.format(
-            StoryPromptTemplates.ENIGMATIC_SITUATION_PROMPT,
-            title,
-            genre.name(),
-            difficulty.name()
-        );
-        
-        String result = chatClient.prompt()
-            .user(userPromptContent)
-            .call()
-            .content();
-
-        return cleanMarkdown(result);
+        return vestigioAIService.generateEnigmaticSituation(title, genre, difficulty);
     }
 
     public String generateStoryFullSolution(String title, String situation) {
-        
-        String userPromptContent = String.format(
-            StoryPromptTemplates.FULL_SOLUTION_PROMPT,
-            title,
-            situation
-        );
-        
-        String result = chatClient.prompt()
-            .user(userPromptContent)
-            .call()
-            .content();
-
-        return cleanMarkdown(result);
+        return vestigioAIService.generateFullSolution(title, situation);
     }
 
     public Boolean storyEvaluation(String enigmaticSituation, String fullSolution) {
-        
-        String userPromptContent = String.format(
-            StoryPromptTemplates.STORY_EVALUATION,
-            enigmaticSituation,
-            fullSolution
-        );
-        
-        String result = chatClient.prompt()
-            .user(userPromptContent)
-            .call()
-            .content();
-
-        System.out.println("String evaluation " + result);
-        return result.toLowerCase().contains("true");
+        return vestigioAIService.evaluateStoryContent(enigmaticSituation, fullSolution);
     }
 
-    private String cleanMarkdown(String markdownText) {
-        if (markdownText == null || markdownText.isEmpty()) {
-            return "";
-        }
+    // HANGMAN METHODS
+    public String generateHangmanWord(String category, Difficulty difficulty) {
+        return hangmanAIService.generateWord(category, difficulty);
+    }
 
-        String cleanedText = markdownText;
+    public String generateHangmanHint(String word, int wrongGuesses) {
+        return hangmanAIService.generateHint(word, wrongGuesses);
+    }
 
-        cleanedText = cleanedText.replaceAll("^\\s*#+\\s*.*\\n?", "");
-        cleanedText = cleanedText.replaceAll("[*_]{1,2}", "");
-        cleanedText = cleanedText.replaceAll("^[\\s]*[-*+]\\s", "");
-        cleanedText = cleanedText.replaceAll("^[\\s]*\\d+\\.\\s", "");
-        cleanedText = cleanedText.replaceAll("^>\\s*", "");
-        cleanedText = cleanedText.replaceAll("^[-*]{3,}\\n?", "");
-        cleanedText = cleanedText.replaceAll("(?m)^\\s*$\\n", "");
-        cleanedText = cleanedText.trim();
+    public Boolean validateHangmanGuess(String word, char guess) {
+        return hangmanAIService.isValidGuess(word, guess);
+    }
 
-        return cleanedText;
+    // TRIVIA METHODS
+    public String generateTriviaQuestion(String category, String difficulty) {
+        return triviaAIService.generateQuestion(category, difficulty);
+    }
+
+    public Integer getTriviaAIAnswer(String questionText, java.util.List<String> options) {
+        return triviaAIService.getAIAnswer(questionText, options);
     }
 }
+

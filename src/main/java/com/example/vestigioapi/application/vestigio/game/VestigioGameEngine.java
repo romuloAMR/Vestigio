@@ -51,15 +51,25 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
 
     @Override
     public void onGameStart(VestigioGameSession session, Map<String, Object> configParams) {
+        System.out.println("[VestigioGameEngine] onGameStart called");
+        System.out.println("[VestigioGameEngine] configParams received: " + configParams);
+        System.out.println("[VestigioGameEngine] configParams keys: " + configParams.keySet());
+        
         if (!configParams.containsKey("storyId")) {
+            System.out.println("[VestigioGameEngine] storyId not found in configParams");
             throw new BusinessRuleException(VestigioErrorMessages.VESTIGIO_STORY_ID_REQUIRED);
         }
 
-        Long storyId = Long.valueOf(configParams.get("storyId").toString());
+        Object storyIdObj = configParams.get("storyId");
+        System.out.println("[VestigioGameEngine] storyId object: " + storyIdObj + " (type: " + storyIdObj.getClass().getName() + ")");
+        
+        Long storyId = Long.valueOf(storyIdObj.toString());
+        System.out.println("[VestigioGameEngine] Parsed storyId: " + storyId);
 
         Story story = storyRepository.findById(storyId)
             .orElseThrow(() -> new ResourceNotFoundException("História não encontrada com ID: " + storyId));
 
+        System.out.println("[VestigioGameEngine] Story found: " + story.getTitle());
         session.setCurrentStory(story);
     }
 
