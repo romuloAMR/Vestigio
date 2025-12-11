@@ -24,4 +24,6 @@ public interface GameEngine<S extends GameSession, C extends GameContent, M exte
     List<C> getContentOptions(S session);
 
     List<M> getGameMoves(S session);
+
+    String getGameType();
 }

@@ -11,6 +11,7 @@ import com.example.vestigioapi.framework.session.model.GameStatus;
 public record GameSessionResponseDTO<T extends GameContent, M extends GameMoveDTO>(
     Long id,
     String roomCode,
+    String gameType,
     GameStatus status,
     T content,
     PlayerDTO master,
