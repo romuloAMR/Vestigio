@@ -1,4 +1,4 @@
-package com.example.vestigioapi.framework.ai.game;
+package com.example.vestigioapi.application.vestigio.ai;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -7,10 +7,6 @@ import com.example.vestigioapi.framework.ai.AIIntegrationService;
 import com.example.vestigioapi.application.vestigio.story.constants.Difficulty;
 import com.example.vestigioapi.application.vestigio.story.constants.Genre;
 
-/**
- * Serviço de IA especializado para o jogo Vestigio.
- * Gerencia toda a geração de histórias enigmáticas.
- */
 @Service
 @RequiredArgsConstructor
 public class VestigioAIService {
@@ -62,7 +58,6 @@ public class VestigioAIService {
             System.out.println("[AI Evaluation] Raw response: " + result);
             System.out.println("[AI Evaluation] Clean response: " + cleanResult);
             
-            // Retorna true se for PERIGOSO (para manter compatibilidade com a lógica existente)
             boolean isDangerous = cleanResult.contains("perigoso") || 
                                   cleanResult.contains("dangerous") ||
                                   (!cleanResult.contains("seguro") && !cleanResult.contains("safe"));
@@ -73,7 +68,6 @@ public class VestigioAIService {
         } catch (Exception e) {
             System.err.println("[AI Evaluation] Error during content evaluation: " + e.getMessage());
             e.printStackTrace();
-            // Em caso de erro, permite o conteúdo passar (fail-open)
             return false;
         }
     }

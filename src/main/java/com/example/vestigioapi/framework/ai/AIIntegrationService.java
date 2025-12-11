@@ -5,16 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
-/**
- * Serviço centralizado de IA usando Spring AI + Vertex AI Gemini.
- * Este serviço é compartilhado por todos os jogos da plataforma.
- * 
- * Responsabilidades:
- * - Interface com Vertex AI Gemini
- * - Geração de conteúdo para todos os jogos
- * - Validação de conteúdo
- * - Limpeza de respostas
- */
 @Service
 @RequiredArgsConstructor
 public class AIIntegrationService {
@@ -27,9 +17,6 @@ public class AIIntegrationService {
         this.chatClient = chatClientBuilder.build();
     }
 
-    /**
-     * Executa um prompt customizado no Vertex AI
-     */
     public String executePrompt(String prompt) {
         String result = chatClient.prompt()
             .user(prompt)
@@ -38,9 +25,6 @@ public class AIIntegrationService {
         return cleanMarkdown(result);
     }
 
-    /**
-     * Executa um prompt sem limpeza de markdown
-     */
     public String executePromptRaw(String prompt) {
         return chatClient.prompt()
             .user(prompt)
@@ -48,9 +32,6 @@ public class AIIntegrationService {
             .content();
     }
 
-    /**
-     * Limpeza de markdown de respostas da IA
-     */
     private String cleanMarkdown(String markdownText) {
         if (markdownText == null || markdownText.isEmpty()) {
             return "";

@@ -1,4 +1,4 @@
-package com.example.vestigioapi.framework.ai.game;
+package com.example.vestigioapi.application.hangman.ai;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -6,10 +6,6 @@ import org.springframework.stereotype.Service;
 import com.example.vestigioapi.framework.ai.AIIntegrationService;
 import com.example.vestigioapi.application.vestigio.story.constants.Difficulty;
 
-/**
- * Serviço de IA especializado para o jogo Hangman (Forca).
- * Gerencia geração de palavras e dicas.
- */
 @Service
 @RequiredArgsConstructor
 public class HangmanAIService {

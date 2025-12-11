@@ -12,7 +12,7 @@ import com.example.vestigioapi.application.trivia.game.dto.TriviaAnswerResponseD
 import com.example.vestigioapi.application.trivia.game.move.TriviaMove;
 import com.example.vestigioapi.application.trivia.question.Question;
 import com.example.vestigioapi.application.trivia.question.QuestionRepository;
-import com.example.vestigioapi.framework.ai.game.TriviaAIService;
+import com.example.vestigioapi.application.trivia.ai.TriviaAIService;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
 import com.example.vestigioapi.framework.engine.GameEngine;

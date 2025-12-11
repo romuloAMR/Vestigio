@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import com.example.vestigioapi.application.hangman.word.dto.WordCreateDTO;
 import com.example.vestigioapi.application.hangman.word.dto.WordResponseDTO;
 import com.example.vestigioapi.application.vestigio.story.constants.Difficulty;
-import com.example.vestigioapi.framework.ai.game.HangmanAIService;
+import com.example.vestigioapi.application.hangman.ai.HangmanAIService;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
 import com.example.vestigioapi.framework.user.model.User;

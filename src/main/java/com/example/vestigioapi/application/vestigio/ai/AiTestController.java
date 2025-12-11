@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.vestigioapi.application.vestigio.ai.dto.EvaluateStoryRequest;
 import com.example.vestigioapi.application.vestigio.ai.dto.GenerateSituationRequest;
 import com.example.vestigioapi.application.vestigio.ai.dto.GenerateSolutionRequest;
-import com.example.vestigioapi.framework.ai.game.VestigioAIService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

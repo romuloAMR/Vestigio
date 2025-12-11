@@ -12,7 +12,7 @@ import com.example.vestigioapi.application.vestigio.story.dto.StoryAICreateDTO;
 import com.example.vestigioapi.application.vestigio.story.dto.StoryCreateDTO;
 import com.example.vestigioapi.application.vestigio.story.dto.StoryResponseDTO;
 import com.example.vestigioapi.application.vestigio.util.VestigioErrorMessages;
-import com.example.vestigioapi.framework.ai.game.VestigioAIService;
+import com.example.vestigioapi.application.vestigio.ai.VestigioAIService;
 import com.example.vestigioapi.framework.common.exception.BusinessRuleException;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;

@@ -1,4 +1,4 @@
-package com.example.vestigioapi.framework.ai.game;
+package com.example.vestigioapi.application.trivia.ai;
 
 import java.util.List;
 
@@ -7,10 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.vestigioapi.framework.ai.AIIntegrationService;
 
-/**
- * Serviço de IA especializado para o jogo Trivia (Quiz).
- * Gerencia geração de perguntas e respostas do IA.
- */
 @Service
 @RequiredArgsConstructor
 public class TriviaAIService {

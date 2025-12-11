@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import com.example.vestigioapi.application.trivia.question.constants.TriviaCategory;
 import com.example.vestigioapi.application.trivia.question.dto.QuestionCreateDTO;
 import com.example.vestigioapi.application.trivia.question.dto.QuestionResponseDTO;
-import com.example.vestigioapi.framework.ai.game.TriviaAIService;
+import com.example.vestigioapi.application.trivia.ai.TriviaAIService;
 import com.example.vestigioapi.framework.common.exception.ForbiddenActionException;
 import com.example.vestigioapi.framework.common.exception.ResourceNotFoundException;
 import com.example.vestigioapi.framework.user.model.User;

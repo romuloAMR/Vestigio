@@ -5,18 +5,17 @@ import org.springframework.stereotype.Service;
 
 import com.example.vestigioapi.application.vestigio.story.constants.Difficulty;
 import com.example.vestigioapi.application.vestigio.story.constants.Genre;
-import com.example.vestigioapi.framework.ai.game.VestigioAIService;
-import com.example.vestigioapi.framework.ai.game.HangmanAIService;
-import com.example.vestigioapi.framework.ai.game.TriviaAIService;
+import com.example.vestigioapi.application.hangman.ai.HangmanAIService;
+import com.example.vestigioapi.application.trivia.ai.TriviaAIService;
 
 /**
- * @deprecated Use framework.ai.game.* services instead
+ * @deprecated Use specific AI services in each game package instead
  * 
  * Este serviço foi mantido por compatibilidade com código antigo.
  * Novas implementações devem usar diretamente:
- * - VestigioAIService para Vestigio
- * - HangmanAIService para Hangman
- * - TriviaAIService para Trivia
+ * - application.vestigio.ai.VestigioAIService para Vestigio
+ * - application.hangman.ai.HangmanAIService para Hangman
+ * - application.trivia.ai.TriviaAIService para Trivia
  */
 @Service
 @RequiredArgsConstructor
