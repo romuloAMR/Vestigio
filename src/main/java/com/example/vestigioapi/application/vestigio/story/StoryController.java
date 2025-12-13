@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
@@ -29,9 +30,12 @@ public class StoryController {
         @AuthenticationPrincipal User creator
     ) {
         StoryResponseDTO response = storyService.createStory(dto, creator);
-        return ResponseEntity
-            .created(URI.create("/api/v1/player/stories/" + response.id()))
-            .body(response);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(response);
     }
 
     @PostMapping("/ai")
@@ -40,9 +44,12 @@ public class StoryController {
         @AuthenticationPrincipal User creator
     ) {
         StoryResponseDTO response = storyService.createAIStory(dto, creator);
-        return ResponseEntity
-            .created(URI.create("/api/v1/player/stories/ai/" + response.id()))
-            .body(response);
+        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/player/stories/{id}")
+                .buildAndExpand(response.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping("/random")
