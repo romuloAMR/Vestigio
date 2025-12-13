@@ -11,6 +11,6 @@ import com.example.vestigioapi.framework.user.model.User;
 public interface StoryRepository extends JpaRepository<Story, Long> {
     List<Story> findByCreator(User creator);
 
-    @Query(value = "SELECT * FROM story ORDER BY RAND() LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT * FROM stories ORDER BY RANDOM() LIMIT :limit", nativeQuery = true)
     List<Story> findRandomStories(@Param("limit") int limit);
 }
