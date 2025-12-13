@@ -56,25 +56,22 @@ public class VestigioGameEngine implements GameEngine<VestigioGameSession, Story
 
     @Override
     public void onGameStart(VestigioGameSession session, Map<String, Object> configParams) {
-        System.out.println("[VestigioGameEngine] onGameStart called");
-        System.out.println("[VestigioGameEngine] configParams received: " + configParams);
-        System.out.println("[VestigioGameEngine] configParams keys: " + configParams.keySet());
+        Story story;
+
+        if (configParams != null && configParams.containsKey("storyId")) {
+            Long storyId = Long.valueOf(configParams.get("storyId").toString());
+            story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new ResourceNotFoundException("História não encontrada com ID: " + storyId));
         
-        if (!configParams.containsKey("storyId")) {
-            System.out.println("[VestigioGameEngine] storyId not found in configParams");
-            throw new BusinessRuleException(VestigioErrorMessages.VESTIGIO_STORY_ID_REQUIRED);
+        } else {
+            List<Story> randomStories = storyRepository.findRandomStories(1);
+
+            if (randomStories.isEmpty()) {
+                throw new BusinessRuleException(VestigioErrorMessages.INSUFFICIENT_STORIES);
+            }
+            story = randomStories.get(0);
         }
 
-        Object storyIdObj = configParams.get("storyId");
-        System.out.println("[VestigioGameEngine] storyId object: " + storyIdObj + " (type: " + storyIdObj.getClass().getName() + ")");
-        
-        Long storyId = Long.valueOf(storyIdObj.toString());
-        System.out.println("[VestigioGameEngine] Parsed storyId: " + storyId);
-
-        Story story = storyRepository.findById(storyId)
-            .orElseThrow(() -> new ResourceNotFoundException("História não encontrada com ID: " + storyId));
-
-        System.out.println("[VestigioGameEngine] Story found: " + story.getTitle());
         session.setCurrentStory(story);
     }
 
